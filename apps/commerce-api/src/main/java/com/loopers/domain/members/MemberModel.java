@@ -47,6 +47,8 @@ public class MemberModel extends BaseEntity {
     public MemberModel(String memberId, String email, String password, String birthDate, Gender gender) {
         validateMemberId(memberId);
         validateEmail(email);
+        validateGender(gender);
+
         this.memberId = memberId;
         this.email = email;
         this.password = password;
@@ -68,6 +70,15 @@ public class MemberModel extends BaseEntity {
             throw new CoreException(
                     ErrorType.BAD_REQUEST,
                     "이메일은 xx@yy.zz 형식이어야 합니다."
+            );
+        }
+    }
+
+    public static void validateGender(Gender gender) {
+        if (gender == null) {
+            throw new CoreException(
+                    ErrorType.BAD_REQUEST,
+                    "성별은 필수입니다."
             );
         }
     }
