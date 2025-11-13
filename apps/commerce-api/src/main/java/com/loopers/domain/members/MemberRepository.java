@@ -1,11 +1,7 @@
 package com.loopers.domain.members;
 
-import java.util.Optional;
-
 public interface MemberRepository {
-    Optional<MemberModel> findByMemberId(String memberId);
-
-    MemberModel save(MemberModel memberModel);
-
+    MemberModel save(MemberModel member);
+    MemberModel findByMemberId(String memberId);
     boolean existsByMemberId(String memberId);
 }

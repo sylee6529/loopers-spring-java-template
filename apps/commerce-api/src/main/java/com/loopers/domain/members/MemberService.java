@@ -15,18 +15,21 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public MemberModel registerMember(String memberId, String name, String email, String password, String birthDate, String gender) {
+    public MemberModel registerMember(String memberId, String email, String password, String birthDate, Gender gender) {
         if (memberRepository.existsByMemberId(memberId)) {
-            throw new CoreException(ErrorType.CONFLICT, "이미 존재하는 사용자 ID입니다.");
+            throw new CoreException(
+                    ErrorType.CONFLICT,
+                    "이미 가입된 ID 입니다."
+            );
         }
-        
+
         String encodedPassword = passwordEncoder.encode(password);
-        MemberModel member = MemberModel.create(memberId, name, email, encodedPassword, birthDate, gender);
+        MemberModel member = new MemberModel(memberId, email, encodedPassword, birthDate, gender);
         return memberRepository.save(member);
     }
 
     @Transactional(readOnly = true)
-    public MemberModel getMember(String memberId) {
-        return memberRepository.findByMemberId(memberId).orElse(null);
+    public MemberModel getMemberByMemberId(String memberId) {
+        return memberRepository.findByMemberId(memberId);
     }
 }
