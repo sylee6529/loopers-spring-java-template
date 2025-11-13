@@ -8,29 +8,27 @@ import com.loopers.support.error.ErrorType;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.math.BigDecimal;
-
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/v1/members")
+@RequestMapping("/api/v1")
 public class MemberV1Controller implements MemberV1ApiSpec {
 
     private final MemberFacade memberFacade;
 
-    @PostMapping("/register")
+    @PostMapping("/members")
     @Override
     public ApiResponse<MemberV1Dto.MemberResponse> registerMember(
-            @Valid @RequestBody MemberV1Dto.MemberRegisterRequest request
+            @Valid @RequestBody MemberV1Dto.RegisterMemberRequest request
     ) {
         MemberInfo memberInfo = memberFacade.registerMember(
                 request.memberId(),
-                request.name(),
                 request.email(),
                 request.password(),
                 request.birthDate(),
@@ -41,18 +39,13 @@ public class MemberV1Controller implements MemberV1ApiSpec {
         return ApiResponse.success(response);
     }
 
-    @GetMapping("/me")
+    @GetMapping("/members/{memberId}")
     @Override
-    public ApiResponse<MemberV1Dto.MemberResponse> getMemberInfo(
-            @RequestHeader("X-USER-ID") String userId
+    public ApiResponse<MemberV1Dto.MemberResponse> getMemberByMemberId(
+            @PathVariable String memberId
     ) {
-        MemberInfo memberInfo = memberFacade.getMemberInfo(userId);
-        if (memberInfo == null) {
-            throw new CoreException(ErrorType.NOT_FOUND, "회원을 찾을 수 없습니다.");
-        }
-        
+        MemberInfo memberInfo = memberFacade.getMemberByMemberId(memberId);
         MemberV1Dto.MemberResponse response = MemberV1Dto.MemberResponse.from(memberInfo);
         return ApiResponse.success(response);
     }
-
 }
