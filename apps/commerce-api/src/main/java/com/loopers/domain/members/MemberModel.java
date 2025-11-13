@@ -41,6 +41,7 @@ public class MemberModel extends BaseEntity {
     private Gender gender;
 
     @Column(name = "password", nullable = false)
+    @JsonIgnore
     private String password;
 
     public MemberModel(String memberId, String email, String password, String birthDate, Gender gender) {
