@@ -15,13 +15,13 @@ public class PointService {
     @Transactional(readOnly = true)
     public BigDecimal getMemberPoints(String memberId) {
         return pointRepository.findByMemberId(memberId)
-                .map(PointModel::getAmount)
+                .map(Point::getAmount)
                 .orElse(null);
     }
 
     @Transactional
-    public PointModel initializeMemberPoints(String memberId) {
-        PointModel point = PointModel.create(memberId, BigDecimal.ZERO);
+    public Point initializeMemberPoints(String memberId) {
+        Point point = Point.create(memberId, BigDecimal.ZERO);
         return pointRepository.save(point);
     }
 }

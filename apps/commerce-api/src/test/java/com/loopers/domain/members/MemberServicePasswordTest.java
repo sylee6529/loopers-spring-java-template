@@ -37,7 +37,7 @@ class MemberServicePasswordTest {
 
         memberService.registerMember("test123", "홍길동", "test@example.com", plainPassword, "1990-01-01", "MALE");
 
-        MemberModel savedMember = memberRepository.findByMemberId("test123").orElseThrow();
+        Member savedMember = memberRepository.findByMemberId("test123").orElseThrow();
 
         assertThat(savedMember.getPassword()).isNotEqualTo(plainPassword);
         assertThat(savedMember.getPassword()).startsWith("$2a$");
@@ -52,8 +52,8 @@ class MemberServicePasswordTest {
         memberService.registerMember("test1", "홍길동1", "test1@example.com", plainPassword, "1990-01-01", "MALE");
         memberService.registerMember("test2", "홍길동2", "test2@example.com", plainPassword, "1990-01-01", "MALE");
 
-        MemberModel member1 = memberRepository.findByMemberId("test1").orElseThrow();
-        MemberModel member2 = memberRepository.findByMemberId("test2").orElseThrow();
+        Member member1 = memberRepository.findByMemberId("test1").orElseThrow();
+        Member member2 = memberRepository.findByMemberId("test2").orElseThrow();
 
         assertThat(member1.getPassword()).isNotEqualTo(member2.getPassword());
         assertThat(passwordEncoder.matches(plainPassword, member1.getPassword())).isTrue();
