@@ -23,7 +23,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 public class ProductServiceIntegrationTest {
 
     @Autowired
-    private ProductService productService;
+    private com.loopers.domain.product.service.ProductReadService productReadService;
 
     @Autowired
     private DatabaseCleanUp databaseCleanUp;

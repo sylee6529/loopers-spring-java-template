@@ -11,6 +11,7 @@ import com.loopers.domain.product.repository.ProductRepository;
 import com.loopers.domain.product.vo.Stock;
 import com.loopers.utils.DatabaseCleanUp;
 import org.junit.jupiter.api.*;
+import jakarta.persistence.EntityManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +35,9 @@ class LikeServiceIntegrationTest {
 
     @Autowired
     private DatabaseCleanUp cleanUp;
+
+    @Autowired
+    private EntityManager entityManager;
 
     @AfterEach
     void tearDown() {
@@ -67,6 +71,7 @@ class LikeServiceIntegrationTest {
             Like saved = likeRepository.findByMemberIdAndProductId("user1", product.getId()).orElse(null);
             assertThat(saved).isNotNull();
 
+            entityManager.clear(); // 1차 캐시 클리어
             Product updated = productRepository.findById(product.getId()).get();
             assertThat(updated.getLikeCount()).isEqualTo(1);
         }
@@ -88,6 +93,7 @@ class LikeServiceIntegrationTest {
             long likeCount = likeRepository.countByProductId(product.getId());
             assertThat(likeCount).isEqualTo(1L);
 
+            entityManager.clear(); // 1차 캐시 클리어
             Product updated = productRepository.findById(product.getId()).get();
             assertThat(updated.getLikeCount()).isEqualTo(1); // 증가 X
         }
