@@ -47,6 +47,13 @@ public class Order extends BaseEntity {
         return new Order(memberId, items, totalPrice);
     }
 
+    public static Order create(String memberId, List<OrderItem> items, Money finalPrice) {
+        validateMemberId(memberId);
+        validateItems(items);
+        validateTotalPrice(finalPrice);
+        return new Order(memberId, items, finalPrice);
+    }
+
     private void addItem(OrderItem item) {
         this.items.add(item);
         item.assignOrder(this);
