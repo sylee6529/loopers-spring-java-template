@@ -13,7 +13,8 @@ import java.util.List;
 public class OrderV1Dto {
 
     public record PlaceOrderRequest(
-            @NotEmpty @Valid List<OrderLineRequest> orderLines
+            @NotEmpty @Valid List<OrderLineRequest> orderLines,
+            Long couponId
     ) {}
 
     public record OrderLineRequest(

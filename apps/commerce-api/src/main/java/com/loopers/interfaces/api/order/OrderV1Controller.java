@@ -27,7 +27,7 @@ public class OrderV1Controller implements OrderV1ApiSpec {
                 .map(line -> OrderLineCommand.of(line.productId(), line.quantity()))
                 .toList();
 
-        OrderCommand command = OrderCommand.of(memberId, orderLines);
+        OrderCommand command = OrderCommand.of(memberId, orderLines, request.couponId());
         OrderInfo orderInfo = orderFacade.placeOrder(command);
         
         OrderV1Dto.OrderResponse response = OrderV1Dto.OrderResponse.from(orderInfo);
