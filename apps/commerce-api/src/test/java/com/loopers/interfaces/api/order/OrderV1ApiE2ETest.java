@@ -100,7 +100,8 @@ class OrderV1ApiE2ETest {
             Long productId = setupProductAndMemberWithPoints();
 
             OrderV1Dto.PlaceOrderRequest request = new OrderV1Dto.PlaceOrderRequest(
-                    List.of(new OrderV1Dto.OrderLineRequest(productId, 2))
+                    List.of(new OrderV1Dto.OrderLineRequest(productId, 2)),
+                    null
             );
 
             HttpHeaders headers = new HttpHeaders();
@@ -128,7 +129,8 @@ class OrderV1ApiE2ETest {
             Long productId = setupProductAndMemberWithPoints();
 
             OrderV1Dto.PlaceOrderRequest request = new OrderV1Dto.PlaceOrderRequest(
-                    List.of(new OrderV1Dto.OrderLineRequest(productId, 200)) // 재고보다 많은 수량
+                    List.of(new OrderV1Dto.OrderLineRequest(productId, 200)), // 재고보다 많은 수량
+                    null
             );
 
             HttpHeaders headers = new HttpHeaders();
@@ -163,7 +165,8 @@ class OrderV1ApiE2ETest {
             Long productId = productRepository.save(product).getId();
 
             OrderV1Dto.PlaceOrderRequest request = new OrderV1Dto.PlaceOrderRequest(
-                    List.of(new OrderV1Dto.OrderLineRequest(productId, 1))
+                    List.of(new OrderV1Dto.OrderLineRequest(productId, 1)),
+                    null
             );
 
             HttpHeaders headers = new HttpHeaders();

@@ -5,6 +5,10 @@ import com.loopers.application.order.OrderFacade;
 import com.loopers.application.order.OrderInfo;
 import com.loopers.application.order.OrderLineCommand;
 import com.loopers.domain.common.vo.Money;
+import com.loopers.domain.coupon.Coupon;
+import com.loopers.domain.coupon.MemberCoupon;
+import com.loopers.domain.coupon.repository.CouponRepository;
+import com.loopers.domain.coupon.repository.MemberCouponRepository;
 import com.loopers.domain.members.Member;
 import com.loopers.domain.members.enums.Gender;
 import com.loopers.domain.members.repository.MemberRepository;
@@ -46,6 +50,12 @@ public class OrderServiceIntegrationTest {
 
     @Autowired
     private MemberRepository memberRepository;
+
+    @Autowired
+    private CouponRepository couponRepository;
+
+    @Autowired
+    private MemberCouponRepository memberCouponRepository;
 
     @Autowired
     private EntityManager entityManager;
@@ -182,6 +192,194 @@ public class OrderServiceIntegrationTest {
 
             assertThatThrownBy(() -> orderFacade.placeOrder(command))
                     .isInstanceOf(RuntimeException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("쿠폰 적용 주문")
+    class OrderWithCoupon {
+
+        @Test
+        @DisplayName("정액 쿠폰 적용 시 할인된 금액으로 결제된다")
+        void fixedCoupon_success() {
+            // given
+            memberRepository.save(createMember("user1"));
+            Product item = productRepository.save(createProduct(1L, "상품", 10000L, 10));
+            pointRepository.save(Point.create("user1", BigDecimal.valueOf(20000L)));
+
+            Coupon coupon = couponRepository.save(Coupon.createFixedCoupon("1000원 할인", BigDecimal.valueOf(1000)));
+            MemberCoupon memberCoupon = memberCouponRepository.save(MemberCoupon.issue("user1", coupon));
+
+            OrderCommand command = OrderCommand.of(
+                    "user1",
+                    List.of(OrderLineCommand.of(item.getId(), 1)),
+                    memberCoupon.getId()
+            );
+
+            // when
+            OrderInfo info = orderFacade.placeOrder(command);
+
+            // then
+            Order saved = orderRepository.findById(info.getId()).orElseThrow();
+            assertThat(saved.getTotalPrice()).isEqualTo(Money.of(9000L)); // 10000 - 1000
+
+            // 쿠폰 사용 처리 확인
+            MemberCoupon usedCoupon = memberCouponRepository.findById(memberCoupon.getId()).orElseThrow();
+            assertThat(usedCoupon.isUsed()).isTrue();
+
+            // 포인트 차감 확인 (9000원만 차감됨)
+            Point point = pointRepository.findByMemberId("user1").orElseThrow();
+            assertThat(point.getAmount()).isEqualByComparingTo(BigDecimal.valueOf(11000)); // 20000 - 9000
+        }
+
+        @Test
+        @DisplayName("정률 쿠폰 적용 시 할인된 금액으로 결제된다")
+        void percentageCoupon_success() {
+            // given
+            memberRepository.save(createMember("user1"));
+            Product item = productRepository.save(createProduct(1L, "상품", 10000L, 10));
+            pointRepository.save(Point.create("user1", BigDecimal.valueOf(20000L)));
+
+            Coupon coupon = couponRepository.save(Coupon.createPercentageCoupon("10% 할인", BigDecimal.valueOf(10)));
+            MemberCoupon memberCoupon = memberCouponRepository.save(MemberCoupon.issue("user1", coupon));
+
+            OrderCommand command = OrderCommand.of(
+                    "user1",
+                    List.of(OrderLineCommand.of(item.getId(), 1)),
+                    memberCoupon.getId()
+            );
+
+            // when
+            OrderInfo info = orderFacade.placeOrder(command);
+
+            // then
+            Order saved = orderRepository.findById(info.getId()).orElseThrow();
+            assertThat(saved.getTotalPrice()).isEqualTo(Money.of(9000L)); // 10000 * 0.9 = 9000
+
+            // 포인트 차감 확인
+            Point point = pointRepository.findByMemberId("user1").orElseThrow();
+            assertThat(point.getAmount()).isEqualByComparingTo(BigDecimal.valueOf(11000)); // 20000 - 9000
+        }
+
+        @Test
+        @DisplayName("존재하지 않는 쿠폰으로 주문 시 실패한다")
+        void nonExistentCoupon_fail() {
+            // given
+            memberRepository.save(createMember("user1"));
+            Product item = productRepository.save(createProduct(1L, "상품", 10000L, 10));
+            pointRepository.save(Point.create("user1", BigDecimal.valueOf(20000L)));
+
+            OrderCommand command = OrderCommand.of(
+                    "user1",
+                    List.of(OrderLineCommand.of(item.getId(), 1)),
+                    999L // 존재하지 않는 쿠폰 ID
+            );
+
+            // when & then
+            assertThatThrownBy(() -> orderFacade.placeOrder(command))
+                    .hasMessageContaining("쿠폰을 찾을 수 없습니다");
+        }
+
+        @Test
+        @DisplayName("이미 사용된 쿠폰으로 주문 시 실패한다")
+        void alreadyUsedCoupon_fail() {
+            // given
+            memberRepository.save(createMember("user1"));
+            Product item = productRepository.save(createProduct(1L, "상품", 10000L, 10));
+            pointRepository.save(Point.create("user1", BigDecimal.valueOf(20000L)));
+
+            Coupon coupon = couponRepository.save(Coupon.createFixedCoupon("1000원 할인", BigDecimal.valueOf(1000)));
+            MemberCoupon memberCoupon = MemberCoupon.issue("user1", coupon);
+            memberCoupon.use(); // 이미 사용 처리
+            memberCouponRepository.save(memberCoupon);
+
+            OrderCommand command = OrderCommand.of(
+                    "user1",
+                    List.of(OrderLineCommand.of(item.getId(), 1)),
+                    memberCoupon.getId()
+            );
+
+            // when & then
+            assertThatThrownBy(() -> orderFacade.placeOrder(command))
+                    .hasMessageContaining("사용할 수 없는 쿠폰입니다");
+        }
+
+        @Test
+        @DisplayName("다른 회원의 쿠폰으로 주문 시 실패한다")
+        void otherMemberCoupon_fail() {
+            // given
+            memberRepository.save(createMember("user1"));
+            memberRepository.save(createMember("user2"));
+            Product item = productRepository.save(createProduct(1L, "상품", 10000L, 10));
+            pointRepository.save(Point.create("user1", BigDecimal.valueOf(20000L)));
+
+            Coupon coupon = couponRepository.save(Coupon.createFixedCoupon("1000원 할인", BigDecimal.valueOf(1000)));
+            MemberCoupon memberCoupon = memberCouponRepository.save(MemberCoupon.issue("user2", coupon)); // user2의 쿠폰
+
+            OrderCommand command = OrderCommand.of(
+                    "user1", // user1이 user2의 쿠폰 사용 시도
+                    List.of(OrderLineCommand.of(item.getId(), 1)),
+                    memberCoupon.getId()
+            );
+
+            // when & then
+            assertThatThrownBy(() -> orderFacade.placeOrder(command))
+                    .hasMessageContaining("본인의 쿠폰만 사용할 수 있습니다");
+        }
+
+        @Test
+        @DisplayName("할인 금액이 주문 금액보다 클 경우 0원으로 결제된다")
+        void discountExceedsPrice_zeroPayment() {
+            // given
+            memberRepository.save(createMember("user1"));
+            Product item = productRepository.save(createProduct(1L, "상품", 1000L, 10));
+            pointRepository.save(Point.create("user1", BigDecimal.valueOf(20000L)));
+
+            Coupon coupon = couponRepository.save(Coupon.createFixedCoupon("5000원 할인", BigDecimal.valueOf(5000)));
+            MemberCoupon memberCoupon = memberCouponRepository.save(MemberCoupon.issue("user1", coupon));
+
+            OrderCommand command = OrderCommand.of(
+                    "user1",
+                    List.of(OrderLineCommand.of(item.getId(), 1)), // 1000원 상품
+                    memberCoupon.getId()
+            );
+
+            // when
+            OrderInfo info = orderFacade.placeOrder(command);
+
+            // then
+            Order saved = orderRepository.findById(info.getId()).orElseThrow();
+            assertThat(saved.getTotalPrice()).isEqualTo(Money.of(0L)); // 1000 - 1000(최대 할인) = 0
+
+            // 포인트 차감 없음
+            Point point = pointRepository.findByMemberId("user1").orElseThrow();
+            assertThat(point.getAmount()).isEqualByComparingTo(BigDecimal.valueOf(20000)); // 변동 없음
+        }
+
+        @Test
+        @DisplayName("쿠폰 적용 주문 실패 시 쿠폰 상태가 롤백된다")
+        void couponRollback_onOrderFailure() {
+            // given
+            memberRepository.save(createMember("user1"));
+            Product item = productRepository.save(createProduct(1L, "상품", 10000L, 1)); // 재고 1개
+            pointRepository.save(Point.create("user1", BigDecimal.valueOf(20000L)));
+
+            Coupon coupon = couponRepository.save(Coupon.createFixedCoupon("1000원 할인", BigDecimal.valueOf(1000)));
+            MemberCoupon memberCoupon = memberCouponRepository.save(MemberCoupon.issue("user1", coupon));
+
+            OrderCommand command = OrderCommand.of(
+                    "user1",
+                    List.of(OrderLineCommand.of(item.getId(), 5)), // 재고 초과
+                    memberCoupon.getId()
+            );
+
+            // when
+            assertThatThrownBy(() -> orderFacade.placeOrder(command))
+                    .isInstanceOf(RuntimeException.class);
+
+            // then - 쿠폰은 사용되지 않은 상태로 유지
+            MemberCoupon notUsedCoupon = memberCouponRepository.findById(memberCoupon.getId()).orElseThrow();
+            assertThat(notUsedCoupon.isUsed()).isFalse();
         }
     }
 }

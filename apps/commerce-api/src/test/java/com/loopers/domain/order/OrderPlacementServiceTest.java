@@ -1,6 +1,7 @@
 package com.loopers.domain.order;
 
 import com.loopers.domain.common.vo.Money;
+import com.loopers.domain.coupon.InMemoryMemberCouponRepository;
 import com.loopers.domain.members.InMemoryMemberRepository;
 import com.loopers.domain.members.enums.Gender;
 import com.loopers.domain.members.Member;
@@ -29,6 +30,7 @@ class OrderPlacementServiceTest {
     private InMemoryProductRepository productRepository;
     private InMemoryMemberRepository memberRepository;
     private InMemoryPointRepository pointRepository;
+    private InMemoryMemberCouponRepository memberCouponRepository;
     private OrderPlacementService orderPlacementService;
 
     @BeforeEach
@@ -37,11 +39,13 @@ class OrderPlacementServiceTest {
         productRepository = new InMemoryProductRepository();
         memberRepository = new InMemoryMemberRepository();
         pointRepository = new InMemoryPointRepository();
+        memberCouponRepository = new InMemoryMemberCouponRepository();
         orderPlacementService = new OrderPlacementService(
                 orderRepository,
                 productRepository,
                 memberRepository,
-                pointRepository
+                pointRepository,
+                memberCouponRepository
         );
     }
 
