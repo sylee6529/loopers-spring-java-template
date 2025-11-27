@@ -24,7 +24,8 @@ public class OrderFacade {
 
         OrderPlacementCommand domainCommand = OrderPlacementCommand.of(
                 command.getMemberId(),
-                domainOrderLines
+                domainOrderLines,
+                command.getMemberCouponId()
         );
 
         Order order = orderPlacementService.placeOrder(domainCommand);
