@@ -16,6 +16,8 @@ public interface ProductRepository {
 
     Page<Product> findAll(ProductSearchFilter filter, Pageable pageable);
 
+    List<Product> findAllByCursor(ProductSearchFilter filter, String cursor, int size);
+
     Product save(Product product);
 
     int decreaseStock(Long productId, int quantity);
@@ -23,4 +25,10 @@ public interface ProductRepository {
     int incrementLikeCount(Long productId);
 
     int decrementLikeCount(Long productId);
+
+    int updateLikeCount(Long productId, long count);
+
+    List<Product> findTopByLikeCount(int limit);
+
+    List<Product> findTopByBrandIdAndLikeCount(Long brandId, int limit);
 }
