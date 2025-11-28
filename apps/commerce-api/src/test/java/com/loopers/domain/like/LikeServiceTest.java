@@ -7,23 +7,33 @@ import com.loopers.domain.like.service.LikeService;
 import com.loopers.domain.product.InMemoryProductRepository;
 import com.loopers.domain.product.Product;
 import com.loopers.domain.product.vo.Stock;
+import com.loopers.infrastructure.cache.CacheInvalidationService;
+import com.loopers.infrastructure.cache.MemberLikesCache;
+import com.loopers.infrastructure.cache.ProductLikeCountCache;
 import com.loopers.support.error.CoreException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class LikeServiceTest {
 
     private InMemoryLikeRepository likeRepository;
     private InMemoryProductRepository productRepository;
+    private CacheInvalidationService cacheInvalidationService;
+    private MemberLikesCache memberLikesCache;
+    private ProductLikeCountCache productLikeCountCache;
     private LikeService likeService;
 
     @BeforeEach
     void setUp() {
         likeRepository = new InMemoryLikeRepository();
         productRepository = new InMemoryProductRepository();
-        likeService = new LikeService(likeRepository, productRepository);
+        cacheInvalidationService = mock(CacheInvalidationService.class);
+        memberLikesCache = mock(MemberLikesCache.class);
+        productLikeCountCache = mock(ProductLikeCountCache.class);
+        likeService = new LikeService(likeRepository, productRepository, cacheInvalidationService, memberLikesCache, productLikeCountCache);
     }
 
     @Test
@@ -31,7 +41,7 @@ class LikeServiceTest {
         // given
         Product product = createProduct();
         Product savedProduct = productRepository.saveWithId(1L, product);
-        String memberId = "member1";
+        Long memberId = 1L;
 
         // when
         likeService.like(memberId, 1L);
@@ -46,7 +56,7 @@ class LikeServiceTest {
         // given
         Product product = createProduct();
         Product savedProduct = productRepository.saveWithId(1L, product);
-        String memberId = "member1";
+        Long memberId = 1L;
 
         // when
         likeService.like(memberId, 1L);
@@ -62,11 +72,11 @@ class LikeServiceTest {
         // given
         Product product = createProduct();
         Product savedProduct = productRepository.saveWithId(1L, product);
-        String memberId = "member1";
-        
+        Long memberId = 1L;
+
         // 먼저 좋아요 등록
         likeService.like(memberId, 1L);
-        
+
         // when
         likeService.unlike(memberId, 1L);
 
@@ -80,7 +90,7 @@ class LikeServiceTest {
         // given
         Product product = createProduct();
         Product savedProduct = productRepository.saveWithId(1L, product);
-        String memberId = "member1";
+        Long memberId = 1L;
 
         // when - 좋아요가 없는 상태에서 취소 시도 (두 번)
         likeService.unlike(memberId, 1L);
@@ -94,7 +104,7 @@ class LikeServiceTest {
     @Test
     void should_throw_exception_when_like_nonexistent_product() {
         // given
-        String memberId = "member1";
+        Long memberId = 1L;
         Long nonExistentProductId = 999L;
 
         // when & then
@@ -106,9 +116,9 @@ class LikeServiceTest {
     @Test
     void should_throw_exception_when_unlike_nonexistent_product() {
         // given
-        String memberId = "member1";
+        Long memberId = 1L;
         Long nonExistentProductId = 999L;
-        
+
         // 좋아요가 존재한다고 가정하고 like repository에 저장
         likeRepository.save(new Like(memberId, nonExistentProductId));
 
@@ -123,8 +133,8 @@ class LikeServiceTest {
         // given
         Product product = createProduct();
         Product savedProduct = productRepository.saveWithId(1L, product);
-        String member1 = "member1";
-        String member2 = "member2";
+        Long member1 = 1L;
+        Long member2 = 2L;
 
         // when
         likeService.like(member1, 1L);

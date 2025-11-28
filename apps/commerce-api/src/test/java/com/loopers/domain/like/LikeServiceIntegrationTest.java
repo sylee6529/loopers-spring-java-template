@@ -65,10 +65,10 @@ class LikeServiceIntegrationTest {
             Product product = productRepository.save(createProduct(1L, "상품A", 1000L, 10));
 
             // when
-            likeService.like(member.getMemberId(), product.getId());
+            likeService.like(member.getId(), product.getId());
 
             // then
-            Like saved = likeRepository.findByMemberIdAndProductId("user1", product.getId()).orElse(null);
+            Like saved = likeRepository.findByMemberIdAndProductId(member.getId(), product.getId()).orElse(null);
             assertThat(saved).isNotNull();
 
             entityManager.clear(); // 1차 캐시 클리어
@@ -81,13 +81,13 @@ class LikeServiceIntegrationTest {
         @Transactional
         void duplicateLike() {
             // given
-            memberRepository.save(createMember("user1", "u1@mail.com"));
+            Member member = memberRepository.save(createMember("user1", "u1@mail.com"));
             Product product = productRepository.save(createProduct(1L, "상품A", 1000L, 10));
 
-            likeService.like("user1", product.getId());
+            likeService.like(member.getId(), product.getId());
 
             // when
-            likeService.like("user1", product.getId()); // 중복 호출
+            likeService.like(member.getId(), product.getId()); // 중복 호출
 
             // then
             long likeCount = likeRepository.countByProductId(product.getId());
@@ -103,16 +103,16 @@ class LikeServiceIntegrationTest {
         @Transactional
         void unlikeSuccess() {
             // given
-            memberRepository.save(createMember("user1", "u1@mail.com"));
+            Member member = memberRepository.save(createMember("user1", "u1@mail.com"));
             Product product = productRepository.save(createProduct(1L, "상품A", 1000L, 10));
 
-            likeService.like("user1", product.getId());
+            likeService.like(member.getId(), product.getId());
 
             // when
-            likeService.unlike("user1", product.getId());
+            likeService.unlike(member.getId(), product.getId());
 
             // then
-            Like like = likeRepository.findByMemberIdAndProductId("user1", product.getId()).orElse(null);
+            Like like = likeRepository.findByMemberIdAndProductId(member.getId(), product.getId()).orElse(null);
             assertThat(like).isNull();
 
             Product updated = productRepository.findById(product.getId()).get();
@@ -124,7 +124,7 @@ class LikeServiceIntegrationTest {
         @Transactional
         void unlikeNonExisting() {
             // given
-            memberRepository.save(createMember("user1", "u1@mail.com"));
+            Member member = memberRepository.save(createMember("user1", "u1@mail.com"));
             Product product = createProduct(1L, "상품A", 1000L, 10);
             product.increaseLikeCount();
             product.increaseLikeCount();
@@ -135,7 +135,7 @@ class LikeServiceIntegrationTest {
             product = productRepository.save(product);
 
             // when — 호출은 해도
-            likeService.unlike("user1", product.getId());
+            likeService.unlike(member.getId(), product.getId());
 
             // then — 변화 없음
             Product updated = productRepository.findById(product.getId()).get();
@@ -147,12 +147,12 @@ class LikeServiceIntegrationTest {
         @Transactional
         void countTest() {
             // given
-            memberRepository.save(createMember("user1", "u1@mail.com"));
-            memberRepository.save(createMember("user2", "u2@mail.com"));
+            Member member1 = memberRepository.save(createMember("user1", "u1@mail.com"));
+            Member member2 = memberRepository.save(createMember("user2", "u2@mail.com"));
             Product product = productRepository.save(createProduct(1L, "상품A", 1000L, 10));
 
-            likeService.like("user1", product.getId());
-            likeService.like("user2", product.getId());
+            likeService.like(member1.getId(), product.getId());
+            likeService.like(member2.getId(), product.getId());
 
             // when
             long count = likeRepository.countByProductId(product.getId());

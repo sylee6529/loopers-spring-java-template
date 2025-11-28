@@ -6,16 +6,18 @@ import java.util.Optional;
 import java.util.Set;
 
 public interface LikeRepository {
-    
-    Optional<Like> findByMemberIdAndProductId(String memberId, Long productId);
-    
-    boolean existsByMemberIdAndProductId(String memberId, Long productId);
-    
+
+    Optional<Like> findByMemberIdAndProductId(Long memberId, Long productId);
+
+    boolean existsByMemberIdAndProductId(Long memberId, Long productId);
+
     long countByProductId(Long productId);
-    
+
     Like save(Like like);
-    
-    void deleteByMemberIdAndProductId(String memberId, Long productId);
-    
-    Set<Long> findLikedProductIds(String memberId, List<Long> productIds);
+
+    void deleteByMemberIdAndProductId(Long memberId, Long productId);
+
+    Set<Long> findLikedProductIds(Long memberId, List<Long> productIds);
+
+    Set<Long> findLikedProductIdsByMemberId(Long memberId);
 }

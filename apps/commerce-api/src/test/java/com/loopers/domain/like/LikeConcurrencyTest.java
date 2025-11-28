@@ -2,6 +2,7 @@ package com.loopers.domain.like;
 
 import com.loopers.application.like.LikeFacade;
 import com.loopers.application.members.MemberFacade;
+import com.loopers.application.members.MemberInfo;
 import com.loopers.domain.brand.Brand;
 import com.loopers.domain.brand.repository.BrandRepository;
 import com.loopers.domain.common.vo.Money;
@@ -17,6 +18,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -66,15 +69,17 @@ class LikeConcurrencyTest {
         CountDownLatch latch = new CountDownLatch(threadCount);
 
         // 10명의 회원 생성
+        List<Long> memberIds = new ArrayList<>();
         for (int i = 0; i < threadCount; i++) {
             String memberId = "member" + i;
-            memberFacade.registerMember(memberId, memberId + "@test.com", "password", "1990-01-01", Gender.MALE);
+            MemberInfo member = memberFacade.registerMember(memberId, memberId + "@test.com", "password", "1990-01-01", Gender.MALE);
+            memberIds.add(member.id());
         }
 
         // when: 10명이 동시에 좋아요
         try (ExecutorService executorService = Executors.newFixedThreadPool(threadCount)) {
             for (int i = 0; i < threadCount; i++) {
-                final String memberId = "member" + i;
+                final Long memberId = memberIds.get(i);
                 executorService.submit(() -> {
                     try {
                         likeFacade.likeProduct(memberId, productId);
@@ -110,10 +115,12 @@ class LikeConcurrencyTest {
         int threadCount = 10;
 
         // 10명의 회원 생성 및 미리 좋아요
+        List<Long> memberIds = new ArrayList<>();
         for (int i = 0; i < threadCount; i++) {
             String memberId = "member" + i;
-            memberFacade.registerMember(memberId, memberId + "@test.com", "password", "1990-01-01", Gender.MALE);
-            likeFacade.likeProduct(memberId, productId);
+            MemberInfo member = memberFacade.registerMember(memberId, memberId + "@test.com", "password", "1990-01-01", Gender.MALE);
+            memberIds.add(member.id());
+            likeFacade.likeProduct(member.id(), productId);
         }
 
         // 좋아요 개수 확인
@@ -125,7 +132,7 @@ class LikeConcurrencyTest {
         // when: 10명이 동시에 좋아요 취소
         try (ExecutorService executorService = Executors.newFixedThreadPool(threadCount)) {
             for (int i = 0; i < threadCount; i++) {
-                final String memberId = "member" + i;
+                final Long memberId = memberIds.get(i);
                 executorService.submit(() -> {
                     try {
                         likeFacade.unlikeProduct(memberId, productId);
@@ -163,15 +170,16 @@ class LikeConcurrencyTest {
         int totalThreadCount = likeCount + unlikeCount;
 
         // 회원 생성
+        List<Long> memberIds = new ArrayList<>();
         for (int i = 0; i < totalThreadCount; i++) {
             String memberId = "member" + i;
-            memberFacade.registerMember(memberId, memberId + "@test.com", "password", "1990-01-01", Gender.MALE);
+            MemberInfo member = memberFacade.registerMember(memberId, memberId + "@test.com", "password", "1990-01-01", Gender.MALE);
+            memberIds.add(member.id());
         }
 
         // unlike할 회원들은 미리 좋아요
         for (int i = likeCount; i < totalThreadCount; i++) {
-            String memberId = "member" + i;
-            likeFacade.likeProduct(memberId, productId);
+            likeFacade.likeProduct(memberIds.get(i), productId);
         }
 
         CountDownLatch latch = new CountDownLatch(totalThreadCount);
@@ -179,7 +187,7 @@ class LikeConcurrencyTest {
         // when: 10명은 좋아요, 5명은 취소
         try (ExecutorService executorService = Executors.newFixedThreadPool(totalThreadCount)) {
             for (int i = 0; i < likeCount; i++) {
-                final String memberId = "member" + i;
+                final Long memberId = memberIds.get(i);
                 executorService.submit(() -> {
                     try {
                         likeFacade.likeProduct(memberId, productId);
@@ -190,7 +198,7 @@ class LikeConcurrencyTest {
             }
 
             for (int i = likeCount; i < totalThreadCount; i++) {
-                final String memberId = "member" + i;
+                final Long memberId = memberIds.get(i);
                 executorService.submit(() -> {
                     try {
                         likeFacade.unlikeProduct(memberId, productId);
