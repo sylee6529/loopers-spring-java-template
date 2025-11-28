@@ -211,6 +211,71 @@ class ProductReadServiceTest {
             verify(likeReadService).findLikedProductIds(eq(memberId), any());
         }
 
+        @DisplayName("brandId로 필터링하여 조회가 성공한다")
+        @Test
+        void shouldGetProducts_whenBrandIdProvided() {
+            // given
+            Long brandId = 1L;
+            ProductSearchFilter filter = ProductSearchFilter.builder()
+                    .brandId(brandId)
+                    .build();
+            Pageable pageable = PageRequest.of(0, 10);
+            String memberId = "member1";
+
+            Product product1 = createProduct(brandId);
+            Product product2 = createProduct(brandId);
+            Brand brand = createBrand(brandId);
+
+            Page<Product> productPage = new PageImpl<>(List.of(product1, product2));
+
+            given(productRepository.findAll(filter, pageable)).willReturn(productPage);
+            given(brandRepository.findByIdIn(List.of(brandId))).willReturn(List.of(brand));
+            given(likeReadService.findLikedProductIds(eq(memberId), any())).willReturn(Set.of());
+
+            // when
+            Page<ProductSummaryInfo> result = productReadService.getProducts(filter, pageable, memberId);
+
+            // then
+            assertThat(result.getContent()).hasSize(2);
+            assertThat(result.getContent()).allMatch(info -> info.getBrandName().equals(brand.getName()));
+
+            verify(productRepository).findAll(filter, pageable);
+            verify(brandRepository).findByIdIn(List.of(brandId));
+        }
+
+        @DisplayName("brandId와 keyword를 함께 사용하여 조회가 성공한다")
+        @Test
+        void shouldGetProducts_whenBrandIdAndKeywordProvided() {
+            // given
+            Long brandId = 1L;
+            String keyword = "테스트";
+            ProductSearchFilter filter = ProductSearchFilter.builder()
+                    .brandId(brandId)
+                    .keyword(keyword)
+                    .build();
+            Pageable pageable = PageRequest.of(0, 10);
+            String memberId = "member1";
+
+            Product product = createProduct(brandId);
+            Brand brand = createBrand(brandId);
+
+            Page<Product> productPage = new PageImpl<>(List.of(product));
+
+            given(productRepository.findAll(filter, pageable)).willReturn(productPage);
+            given(brandRepository.findByIdIn(List.of(brandId))).willReturn(List.of(brand));
+            given(likeReadService.findLikedProductIds(eq(memberId), any())).willReturn(Set.of());
+
+            // when
+            Page<ProductSummaryInfo> result = productReadService.getProducts(filter, pageable, memberId);
+
+            // then
+            assertThat(result.getContent()).hasSize(1);
+            assertThat(result.getContent().get(0).getBrandName()).isEqualTo(brand.getName());
+
+            verify(productRepository).findAll(filter, pageable);
+            verify(brandRepository).findByIdIn(List.of(brandId));
+        }
+
         @DisplayName("회원 ID가 null인 경우에도 목록 조회가 성공한다")
         @Test
         void shouldGetProducts_whenMemberIdIsNull() {
@@ -283,6 +348,248 @@ class ProductReadServiceTest {
             verify(productRepository).findAll(filter, pageable);
             verify(brandRepository, never()).findById(any());
             verify(likeReadService, never()).isLikedBy(any(), any());
+        }
+    }
+
+    @DisplayName("인기 상품 TOP100 조회")
+    @Nested
+    class GetPopularProducts {
+
+        @DisplayName("인기 상품 TOP100 조회가 성공한다")
+        @Test
+        void shouldGetPopularProducts_whenValidInput() {
+            // given
+            String memberId = "member1";
+
+            // 좋아요 수가 다른 여러 상품 생성
+            Product product1 = createProductWithLikeCount(1L, 100);
+            Product product2 = createProductWithLikeCount(2L, 80);
+            Product product3 = createProductWithLikeCount(3L, 60);
+
+            Brand brand1 = createBrand(1L);
+            Brand brand2 = createBrand(2L);
+            Brand brand3 = createBrand(3L);
+
+            List<Product> products = List.of(product1, product2, product3);
+
+            given(productRepository.findTopByLikeCount(100)).willReturn(products);
+            given(brandRepository.findByIdIn(List.of(1L, 2L, 3L))).willReturn(List.of(brand1, brand2, brand3));
+            given(likeReadService.findLikedProductIds(eq(memberId), any())).willReturn(Set.of(product1.getId()));
+
+            // when
+            List<ProductSummaryInfo> result = productReadService.getPopularProducts(memberId);
+
+            // then
+            assertThat(result).hasSize(3);
+            assertThat(result.get(0).getId()).isEqualTo(product1.getId());
+            assertThat(result.get(0).getLikeCount()).isEqualTo(100);
+            assertThat(result.get(0).isLikedByMember()).isTrue();
+
+            assertThat(result.get(1).getId()).isEqualTo(product2.getId());
+            assertThat(result.get(1).getLikeCount()).isEqualTo(80);
+            assertThat(result.get(1).isLikedByMember()).isFalse();
+
+            assertThat(result.get(2).getId()).isEqualTo(product3.getId());
+            assertThat(result.get(2).getLikeCount()).isEqualTo(60);
+            assertThat(result.get(2).isLikedByMember()).isFalse();
+
+            verify(productRepository).findTopByLikeCount(100);
+            verify(brandRepository).findByIdIn(any());
+            verify(likeReadService).findLikedProductIds(eq(memberId), any());
+        }
+
+        @DisplayName("회원 ID가 null인 경우에도 인기 상품 조회가 성공한다")
+        @Test
+        void shouldGetPopularProducts_whenMemberIdIsNull() {
+            // given
+            String memberId = null;
+
+            Product product1 = createProductWithLikeCount(1L, 100);
+            Product product2 = createProductWithLikeCount(2L, 80);
+
+            Brand brand1 = createBrand(1L);
+            Brand brand2 = createBrand(2L);
+
+            List<Product> products = List.of(product1, product2);
+
+            given(productRepository.findTopByLikeCount(100)).willReturn(products);
+            given(brandRepository.findByIdIn(List.of(1L, 2L))).willReturn(List.of(brand1, brand2));
+
+            // when
+            List<ProductSummaryInfo> result = productReadService.getPopularProducts(memberId);
+
+            // then
+            assertThat(result).hasSize(2);
+            assertThat(result.get(0).isLikedByMember()).isFalse();
+            assertThat(result.get(1).isLikedByMember()).isFalse();
+
+            verify(productRepository).findTopByLikeCount(100);
+            verify(brandRepository).findByIdIn(any());
+            verify(likeReadService, never()).findLikedProductIds(any(), any());
+        }
+
+        @DisplayName("상품이 100개 미만이면 전체를 반환한다")
+        @Test
+        void shouldReturnAllProducts_whenLessThan100Products() {
+            // given
+            String memberId = "member1";
+
+            Product product1 = createProductWithLikeCount(1L, 50);
+            Product product2 = createProductWithLikeCount(2L, 30);
+
+            Brand brand1 = createBrand(1L);
+            Brand brand2 = createBrand(2L);
+
+            List<Product> products = List.of(product1, product2);
+
+            given(productRepository.findTopByLikeCount(100)).willReturn(products);
+            given(brandRepository.findByIdIn(List.of(1L, 2L))).willReturn(List.of(brand1, brand2));
+            given(likeReadService.findLikedProductIds(eq(memberId), any())).willReturn(Set.of());
+
+            // when
+            List<ProductSummaryInfo> result = productReadService.getPopularProducts(memberId);
+
+            // then
+            assertThat(result).hasSize(2);
+
+            verify(productRepository).findTopByLikeCount(100);
+        }
+
+        @DisplayName("빈 목록이 반환될 때도 정상 동작한다")
+        @Test
+        void shouldReturnEmptyList_whenNoProducts() {
+            // given
+            String memberId = "member1";
+
+            given(productRepository.findTopByLikeCount(100)).willReturn(List.of());
+
+            // when
+            List<ProductSummaryInfo> result = productReadService.getPopularProducts(memberId);
+
+            // then
+            assertThat(result).isEmpty();
+
+            verify(productRepository).findTopByLikeCount(100);
+            verify(brandRepository, never()).findByIdIn(any());
+            verify(likeReadService, never()).findLikedProductIds(any(), any());
+        }
+    }
+
+    @DisplayName("브랜드별 인기 상품 TOP N 조회")
+    @Nested
+    class GetBrandPopularProducts {
+
+        @DisplayName("특정 브랜드의 인기 상품 TOP N 조회가 성공한다")
+        @Test
+        void shouldGetBrandPopularProducts_whenValidInput() {
+            // given
+            Long brandId = 1L;
+            String memberId = "member1";
+            int limit = 5;
+
+            Product product1 = createProductWithLikeCount(1L, 100);
+            Product product2 = createProductWithLikeCount(2L, 80);
+            Product product3 = createProductWithLikeCount(3L, 60);
+
+            Brand brand = createBrand(brandId);
+
+            List<Product> products = List.of(product1, product2, product3);
+
+            given(brandRepository.findById(brandId)).willReturn(Optional.of(brand));
+            given(productRepository.findTopByBrandIdAndLikeCount(brandId, limit)).willReturn(products);
+            given(likeReadService.findLikedProductIds(eq(memberId), any())).willReturn(Set.of(product1.getId()));
+
+            // when
+            List<ProductSummaryInfo> result = productReadService.getBrandPopularProducts(brandId, limit, memberId);
+
+            // then
+            assertThat(result).hasSize(3);
+            assertThat(result.get(0).getId()).isEqualTo(product1.getId());
+            assertThat(result.get(0).getLikeCount()).isEqualTo(100);
+            assertThat(result.get(0).isLikedByMember()).isTrue();
+
+            assertThat(result.get(1).getId()).isEqualTo(product2.getId());
+            assertThat(result.get(1).getLikeCount()).isEqualTo(80);
+            assertThat(result.get(1).isLikedByMember()).isFalse();
+
+            verify(brandRepository).findById(brandId);
+            verify(productRepository).findTopByBrandIdAndLikeCount(brandId, limit);
+            verify(likeReadService).findLikedProductIds(eq(memberId), any());
+        }
+
+        @DisplayName("회원 ID가 null인 경우에도 브랜드별 인기 상품 조회가 성공한다")
+        @Test
+        void shouldGetBrandPopularProducts_whenMemberIdIsNull() {
+            // given
+            Long brandId = 1L;
+            String memberId = null;
+            int limit = 10;
+
+            Product product1 = createProductWithLikeCount(1L, 100);
+            Product product2 = createProductWithLikeCount(2L, 80);
+
+            Brand brand = createBrand(brandId);
+
+            List<Product> products = List.of(product1, product2);
+
+            given(brandRepository.findById(brandId)).willReturn(Optional.of(brand));
+            given(productRepository.findTopByBrandIdAndLikeCount(brandId, limit)).willReturn(products);
+
+            // when
+            List<ProductSummaryInfo> result = productReadService.getBrandPopularProducts(brandId, limit, memberId);
+
+            // then
+            assertThat(result).hasSize(2);
+            assertThat(result.get(0).isLikedByMember()).isFalse();
+            assertThat(result.get(1).isLikedByMember()).isFalse();
+
+            verify(brandRepository).findById(brandId);
+            verify(productRepository).findTopByBrandIdAndLikeCount(brandId, limit);
+            verify(likeReadService, never()).findLikedProductIds(any(), any());
+        }
+
+        @DisplayName("해당 브랜드의 상품이 없으면 빈 리스트를 반환한다")
+        @Test
+        void shouldReturnEmptyList_whenNoProducts() {
+            // given
+            Long brandId = 1L;
+            String memberId = "member1";
+            int limit = 10;
+
+            Brand brand = createBrand(brandId);
+
+            given(brandRepository.findById(brandId)).willReturn(Optional.of(brand));
+            given(productRepository.findTopByBrandIdAndLikeCount(brandId, limit)).willReturn(List.of());
+
+            // when
+            List<ProductSummaryInfo> result = productReadService.getBrandPopularProducts(brandId, limit, memberId);
+
+            // then
+            assertThat(result).isEmpty();
+
+            verify(brandRepository).findById(brandId);
+            verify(productRepository).findTopByBrandIdAndLikeCount(brandId, limit);
+            verify(likeReadService, never()).findLikedProductIds(any(), any());
+        }
+
+        @DisplayName("존재하지 않는 브랜드로 조회 시 예외가 발생한다")
+        @Test
+        void shouldThrowException_whenBrandNotFound() {
+            // given
+            Long brandId = 999L;
+            String memberId = "member1";
+            int limit = 10;
+
+            given(brandRepository.findById(brandId)).willReturn(Optional.empty());
+
+            // when & then
+            assertThatThrownBy(() -> productReadService.getBrandPopularProducts(brandId, limit, memberId))
+                    .isInstanceOf(CoreException.class)
+                    .hasMessageContaining("브랜드를 찾을 수 없습니다");
+
+            verify(brandRepository).findById(brandId);
+            verify(productRepository, never()).findTopByBrandIdAndLikeCount(any(), anyInt());
+            verify(likeReadService, never()).findLikedProductIds(any(), any());
         }
     }
 
@@ -381,5 +688,30 @@ class ProductReadServiceTest {
         }
 
         return brand;
+    }
+
+    private Product createProductWithLikeCount(Long productId, int likeCount) {
+        Product product = new Product(
+                productId,
+                "테스트 상품 " + productId,
+                "상품 설명",
+                Money.of(10000),
+                Stock.of(100)
+        );
+
+        // 리플렉션을 사용해서 ID와 likeCount를 설정
+        try {
+            java.lang.reflect.Field idField = product.getClass().getSuperclass().getDeclaredField("id");
+            idField.setAccessible(true);
+            idField.set(product, productId);
+
+            java.lang.reflect.Field likeCountField = product.getClass().getDeclaredField("likeCount");
+            likeCountField.setAccessible(true);
+            likeCountField.set(product, likeCount);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        return product;
     }
 }

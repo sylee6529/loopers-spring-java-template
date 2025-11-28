@@ -25,6 +25,12 @@ public class InMemoryMemberRepository implements MemberRepository {
         return store.containsKey(memberId);
     }
 
+    @Override
+    public boolean existsById(Long id) {
+        return store.values().stream()
+                .anyMatch(member -> member.getId().equals(id));
+    }
+
     public void clear() {
         store.clear();
     }
