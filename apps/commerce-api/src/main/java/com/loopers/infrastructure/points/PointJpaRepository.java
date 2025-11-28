@@ -10,9 +10,9 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
 public interface PointJpaRepository extends JpaRepository<Point, Long> {
-    Optional<Point> findByMemberId(String memberId);
+    Optional<Point> findByMemberId(Long memberId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p FROM Point p WHERE p.memberId = :memberId")
-    Optional<Point> findByMemberIdForUpdate(@Param("memberId") String memberId);
+    Optional<Point> findByMemberIdForUpdate(@Param("memberId") Long memberId);
 }

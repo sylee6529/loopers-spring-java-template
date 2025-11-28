@@ -24,7 +24,7 @@ public class InMemoryMemberCouponRepository implements MemberCouponRepository {
     }
 
     @Override
-    public List<MemberCoupon> findByMemberId(String memberId) {
+    public List<MemberCoupon> findByMemberId(Long memberId) {
         return store.values().stream()
                 .filter(mc -> mc.getMemberId().equals(memberId))
                 .toList();

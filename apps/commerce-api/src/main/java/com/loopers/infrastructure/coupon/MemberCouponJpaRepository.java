@@ -16,5 +16,5 @@ public interface MemberCouponJpaRepository extends JpaRepository<MemberCoupon, L
     @Query("SELECT mc FROM MemberCoupon mc JOIN FETCH mc.coupon WHERE mc.id = :id")
     Optional<MemberCoupon> findByIdForUpdate(@Param("id") Long id);
 
-    List<MemberCoupon> findByMemberId(String memberId);
+    List<MemberCoupon> findByMemberId(Long memberId);
 }

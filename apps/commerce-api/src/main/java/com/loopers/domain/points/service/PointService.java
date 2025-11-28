@@ -15,14 +15,14 @@ public class PointService {
     private final PointRepository pointRepository;
 
     @Transactional(readOnly = true)
-    public BigDecimal getMemberPoints(String memberId) {
+    public BigDecimal getMemberPoints(Long memberId) {
         return pointRepository.findByMemberId(memberId)
                 .map(Point::getAmount)
                 .orElse(null);
     }
 
     @Transactional
-    public Point initializeMemberPoints(String memberId) {
+    public Point initializeMemberPoints(Long memberId) {
         Point point = Point.create(memberId, BigDecimal.ZERO);
         return pointRepository.save(point);
     }

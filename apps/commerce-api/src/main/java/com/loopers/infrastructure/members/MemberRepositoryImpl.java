@@ -24,4 +24,9 @@ public class MemberRepositoryImpl implements MemberRepository {
     public boolean existsByMemberId(String memberId) {
         return memberJpaRepository.existsByMemberId(memberId);
     }
+
+    @Override
+    public boolean existsById(Long id) {
+        return memberJpaRepository.existsById(id);
+    }
 }

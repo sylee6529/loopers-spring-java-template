@@ -18,8 +18,8 @@ import java.util.List;
 public class Order extends BaseEntity {
 
     @Getter
-    @Column(name = "member_id", nullable = false, length = 10)
-    private String memberId;
+    @Column(name = "member_id", nullable = false)
+    private Long memberId;
 
     @Getter
     @Embedded
@@ -29,7 +29,7 @@ public class Order extends BaseEntity {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<OrderItem> items = new ArrayList<>();
 
-    private Order(String memberId, List<OrderItem> items, Money totalPrice) {
+    private Order(Long memberId, List<OrderItem> items, Money totalPrice) {
         validateMemberId(memberId);
         validateItems(items);
         validateTotalPrice(totalPrice);
@@ -40,14 +40,14 @@ public class Order extends BaseEntity {
         items.forEach(this::addItem);
     }
 
-    public static Order create(String memberId, List<OrderItem> items) {
+    public static Order create(Long memberId, List<OrderItem> items) {
         validateMemberId(memberId);
         validateItems(items);
         Money totalPrice = calculateTotalPrice(items);
         return new Order(memberId, items, totalPrice);
     }
 
-    public static Order create(String memberId, List<OrderItem> items, Money finalPrice) {
+    public static Order create(Long memberId, List<OrderItem> items, Money finalPrice) {
         validateMemberId(memberId);
         validateItems(items);
         validateTotalPrice(finalPrice);
@@ -69,8 +69,8 @@ public class Order extends BaseEntity {
                 .reduce(Money.zero(), Money::plus);
     }
 
-    private static void validateMemberId(String memberId) {
-        if (memberId == null || memberId.trim().isEmpty()) {
+    private static void validateMemberId(Long memberId) {
+        if (memberId == null) {
             throw new CoreException(ErrorType.BAD_REQUEST, "회원 ID는 필수입니다.");
         }
     }

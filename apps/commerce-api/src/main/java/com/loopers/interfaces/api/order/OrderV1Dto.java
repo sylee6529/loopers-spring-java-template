@@ -24,7 +24,7 @@ public class OrderV1Dto {
 
     public record OrderResponse(
             Long id,
-            String memberId,
+            Long memberId,
             BigDecimal totalPrice,
             List<OrderItemResponse> items,
             ZonedDateTime orderedAt

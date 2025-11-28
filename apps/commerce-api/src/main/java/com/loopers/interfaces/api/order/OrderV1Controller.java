@@ -21,7 +21,7 @@ public class OrderV1Controller implements OrderV1ApiSpec {
     @PostMapping("/orders")
     public ApiResponse<OrderV1Dto.OrderResponse> placeOrder(
             @Valid @RequestBody OrderV1Dto.PlaceOrderRequest request,
-            @RequestHeader("X-USER-ID") String memberId
+            @RequestHeader("X-USER-ID") Long memberId
     ) {
         List<OrderLineCommand> orderLines = request.orderLines().stream()
                 .map(line -> OrderLineCommand.of(line.productId(), line.quantity()))

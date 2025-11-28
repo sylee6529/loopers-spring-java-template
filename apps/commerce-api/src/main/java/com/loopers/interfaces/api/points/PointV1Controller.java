@@ -22,12 +22,12 @@ public class PointV1Controller implements PointV1ApiSpec {
     @GetMapping
     @Override
     public ApiResponse<PointV1Dto.PointResponse> getMemberPoints(
-            @RequestHeader(value = "X-USER-ID", required = false) String userId
+            @RequestHeader(value = "X-USER-ID", required = false) Long userId
     ) {
-        if (userId == null || userId.isBlank()) {
+        if (userId == null) {
             throw new CoreException(ErrorType.MISSING_REQUEST_HEADER, "X-USER-ID 헤더는 필수입니다.");
         }
-        
+
         BigDecimal points = pointService.getMemberPoints(userId);
         PointV1Dto.PointResponse response = new PointV1Dto.PointResponse(points);
         return ApiResponse.success(response);

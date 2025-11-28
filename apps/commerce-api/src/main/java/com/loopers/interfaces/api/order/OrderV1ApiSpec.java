@@ -14,6 +14,6 @@ public interface OrderV1ApiSpec {
     @Operation(summary = "주문 생성", description = "새로운 주문을 생성합니다.")
     ApiResponse<OrderV1Dto.OrderResponse> placeOrder(
             @Valid @RequestBody OrderV1Dto.PlaceOrderRequest request,
-            @RequestHeader("X-USER-ID") String memberId
+            @RequestHeader("X-USER-ID") Long memberId
     );
 }

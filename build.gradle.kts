@@ -54,6 +54,12 @@ subprojects {
         implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
         // Lombok
         implementation("org.projectlombok:lombok")
+        // Faker
+        implementation("com.github.javafaker:javafaker:1.0.2") {
+            exclude(group = "org.yaml", module = "snakeyaml")
+        }
+        implementation("org.yaml:snakeyaml:2.3")
+
         annotationProcessor("org.projectlombok:lombok")
         // Test
         testRuntimeOnly("org.junit.platform:junit-platform-launcher")

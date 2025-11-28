@@ -14,7 +14,7 @@ import java.util.List;
 public class OrderInfo {
     
     private final Long id;
-    private final String memberId;
+    private final Long memberId;
     private final Money totalPrice;
     private final List<OrderItemInfo> items;
     private final ZonedDateTime orderedAt;
