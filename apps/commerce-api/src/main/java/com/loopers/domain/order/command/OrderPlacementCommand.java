@@ -9,11 +9,11 @@ import java.util.List;
 @Builder
 public class OrderPlacementCommand {
 
-    private final String memberId;
+    private final Long memberId;
     private final List<OrderLineCommand> orderLines;
     private final Long memberCouponId;
 
-    public static OrderPlacementCommand of(String memberId, List<OrderLineCommand> orderLines) {
+    public static OrderPlacementCommand of(Long memberId, List<OrderLineCommand> orderLines) {
         return OrderPlacementCommand.builder()
                 .memberId(memberId)
                 .orderLines(orderLines)
@@ -21,7 +21,7 @@ public class OrderPlacementCommand {
                 .build();
     }
 
-    public static OrderPlacementCommand of(String memberId, List<OrderLineCommand> orderLines, Long memberCouponId) {
+    public static OrderPlacementCommand of(Long memberId, List<OrderLineCommand> orderLines, Long memberCouponId) {
         return OrderPlacementCommand.builder()
                 .memberId(memberId)
                 .orderLines(orderLines)

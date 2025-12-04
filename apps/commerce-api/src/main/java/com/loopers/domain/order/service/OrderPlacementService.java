@@ -67,7 +67,7 @@ public class OrderPlacementService {
         return orderRepository.save(order);
     }
 
-    private MemberCoupon validateAndLockCoupon(Long memberCouponId, String memberId) {
+    private MemberCoupon validateAndLockCoupon(Long memberCouponId, Long memberId) {
         MemberCoupon memberCoupon = memberCouponRepository.findByIdForUpdate(memberCouponId)
                 .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "쿠폰을 찾을 수 없습니다."));
 
@@ -79,7 +79,7 @@ public class OrderPlacementService {
 
     private List<OrderItem> processOrderLines(List<OrderLineCommand> orderLines) {
         List<OrderItem> items = new ArrayList<>();
-        
+
         for (OrderLineCommand line : orderLines) {
             Product product = productRepository.findById(line.getProductId())
                     .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "상품을 찾을 수 없습니다."));
@@ -91,17 +91,17 @@ public class OrderPlacementService {
 
             items.add(new OrderItem(product.getId(), line.getQuantity(), product.getPrice()));
         }
-        
+
         return items;
     }
 
-    private void validateMemberExists(String memberId) {
-        if (!memberRepository.existsByMemberId(memberId)) {
+    private void validateMemberExists(Long memberId) {
+        if (!memberRepository.existsById(memberId)) {
             throw new CoreException(ErrorType.NOT_FOUND, "회원을 찾을 수 없습니다.");
         }
     }
 
-    private void payWithPoints(String memberId, Money totalPrice) {
+    private void payWithPoints(Long memberId, Money totalPrice) {
         Point point = pointRepository.findByMemberIdForUpdate(memberId)
                 .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "포인트 정보를 찾을 수 없습니다."));
 

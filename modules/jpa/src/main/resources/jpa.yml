@@ -37,7 +37,7 @@ spring:
   jpa:
     show-sql: true
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
 
 datasource:
   mysql-jpa:
@@ -46,6 +46,11 @@ datasource:
       username: application
       password: application
 
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
 ---
 spring.config.activate.on-profile: test
 
@@ -53,7 +58,7 @@ spring:
   jpa:
     show-sql: true
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
 
 datasource:
   mysql-jpa:

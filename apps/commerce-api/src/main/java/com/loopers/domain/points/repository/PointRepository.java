@@ -5,9 +5,9 @@ import com.loopers.domain.points.Point;
 import java.util.Optional;
 
 public interface PointRepository {
-    Optional<Point> findByMemberId(String memberId);
+    Optional<Point> findByMemberId(Long memberId);
 
-    Optional<Point> findByMemberIdForUpdate(String memberId);
+    Optional<Point> findByMemberIdForUpdate(Long memberId);
 
     Point save(Point point);
 }

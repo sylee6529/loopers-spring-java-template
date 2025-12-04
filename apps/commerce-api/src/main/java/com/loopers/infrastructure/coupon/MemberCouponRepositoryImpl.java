@@ -25,7 +25,7 @@ public class MemberCouponRepositoryImpl implements MemberCouponRepository {
     }
 
     @Override
-    public List<MemberCoupon> findByMemberId(String memberId) {
+    public List<MemberCoupon> findByMemberId(Long memberId) {
         return memberCouponJpaRepository.findByMemberId(memberId);
     }
 

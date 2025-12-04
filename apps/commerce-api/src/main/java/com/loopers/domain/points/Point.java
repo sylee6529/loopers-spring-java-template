@@ -19,13 +19,13 @@ import java.math.BigDecimal;
 @Table(name = "point")
 public class Point extends BaseEntity {
 
-    @Column(unique = true, nullable = false, length = 10)
-    private String memberId;
+    @Column(unique = true, nullable = false)
+    private Long memberId;
 
     @Column(nullable = false)
     private BigDecimal amount;
 
-    public static Point create(String memberId, BigDecimal amount) {
+    public static Point create(Long memberId, BigDecimal amount) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) < 0) {
             throw new CoreException(ErrorType.BAD_REQUEST, "포인트는 0 이상이어야 합니다");
         }

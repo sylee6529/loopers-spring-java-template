@@ -19,7 +19,7 @@ public class MemberCoupon {
     private Long id;
 
     @Column(nullable = false)
-    private String memberId;
+    private Long memberId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "coupon_id", nullable = false)
@@ -28,14 +28,14 @@ public class MemberCoupon {
     @Column(nullable = false)
     private boolean used;
 
-    private MemberCoupon(String memberId, Coupon coupon) {
+    private MemberCoupon(Long memberId, Coupon coupon) {
         validate(memberId, coupon);
         this.memberId = memberId;
         this.coupon = coupon;
         this.used = false;
     }
 
-    public static MemberCoupon issue(String memberId, Coupon coupon) {
+    public static MemberCoupon issue(Long memberId, Coupon coupon) {
         return new MemberCoupon(memberId, coupon);
     }
 
@@ -54,7 +54,7 @@ public class MemberCoupon {
         return coupon.calculateDiscount(originalPrice);
     }
 
-    public void validateOwnership(String memberId) {
+    public void validateOwnership(Long memberId) {
         if (!this.memberId.equals(memberId)) {
             throw new CoreException(ErrorType.BAD_REQUEST, "본인의 쿠폰만 사용할 수 있습니다.");
         }
@@ -66,8 +66,8 @@ public class MemberCoupon {
         }
     }
 
-    private void validate(String memberId, Coupon coupon) {
-        if (memberId == null || memberId.isBlank()) {
+    private void validate(Long memberId, Coupon coupon) {
+        if (memberId == null) {
             throw new CoreException(ErrorType.BAD_REQUEST, "회원 ID는 필수입니다.");
         }
         if (coupon == null) {

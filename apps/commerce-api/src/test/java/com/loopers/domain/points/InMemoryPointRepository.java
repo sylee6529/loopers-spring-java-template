@@ -8,15 +8,15 @@ import java.util.Optional;
 
 public class InMemoryPointRepository implements PointRepository {
 
-    private final Map<String, Point> store = new HashMap<>();
+    private final Map<Long, Point> store = new HashMap<>();
 
     @Override
-    public Optional<Point> findByMemberId(String memberId) {
+    public Optional<Point> findByMemberId(Long memberId) {
         return Optional.ofNullable(store.get(memberId));
     }
 
     @Override
-    public Optional<Point> findByMemberIdForUpdate(String memberId) {
+    public Optional<Point> findByMemberIdForUpdate(Long memberId) {
         return findByMemberId(memberId);
     }
 

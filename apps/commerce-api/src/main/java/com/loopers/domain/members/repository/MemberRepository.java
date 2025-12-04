@@ -6,4 +6,5 @@ public interface MemberRepository {
     Member save(Member member);
     Member findByMemberId(String memberId);
     boolean existsByMemberId(String memberId);
+    boolean existsById(Long id);
 }

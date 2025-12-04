@@ -39,6 +39,14 @@ public class InMemoryProductRepository implements ProductRepository {
     }
 
     @Override
+    public List<Product> findAllByCursor(ProductSearchFilter filter, String cursor, int size) {
+        // 간단한 구현: 커서는 무시하고 size만큼 반환
+        return store.values().stream()
+                .limit(size + 1)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public Product save(Product product) {
         if (product.getId() == null) {
             // BaseEntity의 id는 final이므로 리플렉션을 사용하거나 다른 방법 필요
@@ -90,6 +98,45 @@ public class InMemoryProductRepository implements ProductRepository {
         }
         product.decreaseLikeCount();
         return 1;
+    }
+
+    @Override
+    public int updateLikeCount(Long productId, long count) {
+        Product product = store.get(productId);
+        if (product == null) {
+            return 0;
+        }
+        product.setLikeCount((int) count);
+        return 1;
+    }
+
+    @Override
+    public List<Product> findTopByLikeCount(int limit) {
+        return store.values().stream()
+                .sorted((p1, p2) -> {
+                    int likeCompare = Integer.compare(p2.getLikeCount(), p1.getLikeCount());
+                    if (likeCompare != 0) {
+                        return likeCompare;
+                    }
+                    return Long.compare(p2.getId(), p1.getId());
+                })
+                .limit(limit)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Product> findTopByBrandIdAndLikeCount(Long brandId, int limit) {
+        return store.values().stream()
+                .filter(product -> product.getBrandId().equals(brandId))
+                .sorted((p1, p2) -> {
+                    int likeCompare = Integer.compare(p2.getLikeCount(), p1.getLikeCount());
+                    if (likeCompare != 0) {
+                        return likeCompare;
+                    }
+                    return Long.compare(p2.getId(), p1.getId());
+                })
+                .limit(limit)
+                .collect(Collectors.toList());
     }
 
     public void clear() {

@@ -10,6 +10,6 @@ public interface PointV1ApiSpec {
 
     @Operation(summary = "포인트 조회", description = "현재 로그인한 회원의 포인트를 조회합니다.")
     ApiResponse<PointV1Dto.PointResponse> getMemberPoints(
-            @Parameter(description = "사용자 ID", required = true) String userId
+            @Parameter(description = "사용자 ID", required = true) Long userId
     );
 }

@@ -19,7 +19,7 @@ public class MemberFacade {
     @Transactional
     public MemberInfo registerMember(String memberId, String email, String password, String birthDate, Gender gender) {
         Member member = memberService.registerMember(memberId, email, password, birthDate, gender);
-        pointService.initializeMemberPoints(memberId);
+        pointService.initializeMemberPoints(member.getId());  // Member PK 사용
         return MemberInfo.from(member);
     }
 

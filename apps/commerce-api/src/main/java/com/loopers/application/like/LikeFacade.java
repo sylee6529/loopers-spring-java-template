@@ -12,11 +12,11 @@ public class LikeFacade {
 
     private final LikeService likeService;
 
-    public void likeProduct(String memberId, Long productId) {
+    public void likeProduct(Long memberId, Long productId) {
         likeService.like(memberId, productId);
     }
 
-    public void unlikeProduct(String memberId, Long productId) {
+    public void unlikeProduct(Long memberId, Long productId) {
         likeService.unlike(memberId, productId);
     }
 }

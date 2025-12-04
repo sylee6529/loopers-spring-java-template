@@ -17,12 +17,12 @@ public class LikeRepositoryImpl implements LikeRepository {
     private final LikeJpaRepository likeJpaRepository;
 
     @Override
-    public Optional<Like> findByMemberIdAndProductId(String memberId, Long productId) {
+    public Optional<Like> findByMemberIdAndProductId(Long memberId, Long productId) {
         return likeJpaRepository.findByMemberIdAndProductId(memberId, productId);
     }
 
     @Override
-    public boolean existsByMemberIdAndProductId(String memberId, Long productId) {
+    public boolean existsByMemberIdAndProductId(Long memberId, Long productId) {
         return likeJpaRepository.existsByMemberIdAndProductId(memberId, productId);
     }
 
@@ -37,13 +37,21 @@ public class LikeRepositoryImpl implements LikeRepository {
     }
 
     @Override
-    public void deleteByMemberIdAndProductId(String memberId, Long productId) {
+    public void deleteByMemberIdAndProductId(Long memberId, Long productId) {
         likeJpaRepository.deleteByMemberIdAndProductId(memberId, productId);
     }
 
     @Override
-    public Set<Long> findLikedProductIds(String memberId, List<Long> productIds) {
+    public Set<Long> findLikedProductIds(Long memberId, List<Long> productIds) {
         return likeJpaRepository.findByMemberIdAndProductIdIn(memberId, productIds)
+                .stream()
+                .map(Like::getProductId)
+                .collect(Collectors.toSet());
+    }
+
+    @Override
+    public Set<Long> findLikedProductIdsByMemberId(Long memberId) {
+        return likeJpaRepository.findByMemberId(memberId)
                 .stream()
                 .map(Like::getProductId)
                 .collect(Collectors.toSet());

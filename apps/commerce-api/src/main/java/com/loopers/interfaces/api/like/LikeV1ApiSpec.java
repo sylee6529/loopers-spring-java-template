@@ -13,12 +13,12 @@ public interface LikeV1ApiSpec {
     @Operation(summary = "상품 좋아요", description = "특정 상품에 좋아요를 추가합니다.")
     ApiResponse<Void> likeProduct(
             @PathVariable Long productId,
-            @RequestHeader("X-USER-ID") String memberId
+            @RequestHeader("X-USER-ID") Long memberId
     );
 
     @Operation(summary = "상품 좋아요 취소", description = "특정 상품의 좋아요를 취소합니다.")
     ApiResponse<Void> unlikeProduct(
             @PathVariable Long productId,
-            @RequestHeader("X-USER-ID") String memberId
+            @RequestHeader("X-USER-ID") Long memberId
     );
 }

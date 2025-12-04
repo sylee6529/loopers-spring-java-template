@@ -11,7 +11,7 @@ public interface MemberCouponRepository {
 
     Optional<MemberCoupon> findByIdForUpdate(Long id);
 
-    List<MemberCoupon> findByMemberId(String memberId);
+    List<MemberCoupon> findByMemberId(Long memberId);
 
     MemberCoupon save(MemberCoupon memberCoupon);
 }

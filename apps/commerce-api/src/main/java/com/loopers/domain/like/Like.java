@@ -21,21 +21,21 @@ import java.util.Objects;
 )
 public class Like extends BaseEntity {
 
-    @Column(name = "member_id", nullable = false, length = 10)
-    private String memberId;
+    @Column(name = "member_id", nullable = false)
+    private Long memberId;
 
     @Column(name = "product_id", nullable = false)
     private Long productId;
 
-    public Like(String memberId, Long productId) {
+    public Like(Long memberId, Long productId) {
         validateMemberId(memberId);
         validateProductId(productId);
         this.memberId = memberId;
         this.productId = productId;
     }
 
-    private static void validateMemberId(String memberId) {
-        if (memberId == null || memberId.trim().isEmpty()) {
+    private static void validateMemberId(Long memberId) {
+        if (memberId == null) {
             throw new CoreException(ErrorType.BAD_REQUEST, "회원 ID는 필수입니다.");
         }
     }

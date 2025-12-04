@@ -15,7 +15,7 @@ public class LikeV1Controller implements LikeV1ApiSpec {
     @PostMapping("/products/{productId}/likes")
     public ApiResponse<Void> likeProduct(
             @PathVariable Long productId,
-            @RequestHeader("X-USER-ID") String memberId
+            @RequestHeader("X-USER-ID") Long memberId
     ) {
         likeFacade.likeProduct(memberId, productId);
         return ApiResponse.success(null);
@@ -24,7 +24,7 @@ public class LikeV1Controller implements LikeV1ApiSpec {
     @DeleteMapping("/products/{productId}/likes")
     public ApiResponse<Void> unlikeProduct(
             @PathVariable Long productId,
-            @RequestHeader("X-USER-ID") String memberId
+            @RequestHeader("X-USER-ID") Long memberId
     ) {
         likeFacade.unlikeProduct(memberId, productId);
         return ApiResponse.success(null);

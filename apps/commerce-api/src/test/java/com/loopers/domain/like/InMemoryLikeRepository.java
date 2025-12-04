@@ -2,24 +2,27 @@ package com.loopers.domain.like;
 
 import com.loopers.domain.like.repository.LikeRepository;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class InMemoryLikeRepository implements LikeRepository {
 
     private final Map<String, Like> store = new HashMap<>();
 
-    private String key(String memberId, Long productId) {
+    private String key(Long memberId, Long productId) {
         return memberId + ":" + productId;
     }
 
     @Override
-    public Optional<Like> findByMemberIdAndProductId(String memberId, Long productId) {
+    public Optional<Like> findByMemberIdAndProductId(Long memberId, Long productId) {
         return Optional.ofNullable(store.get(key(memberId, productId)));
     }
 
     @Override
-    public boolean existsByMemberIdAndProductId(String memberId, Long productId) {
+    public boolean existsByMemberIdAndProductId(Long memberId, Long productId) {
         return store.containsKey(key(memberId, productId));
     }
 
@@ -37,15 +40,23 @@ public class InMemoryLikeRepository implements LikeRepository {
     }
 
     @Override
-    public void deleteByMemberIdAndProductId(String memberId, Long productId) {
+    public void deleteByMemberIdAndProductId(Long memberId, Long productId) {
         store.remove(key(memberId, productId));
     }
 
     @Override
-    public java.util.Set<Long> findLikedProductIds(String memberId, java.util.List<Long> productIds) {
+    public Set<Long> findLikedProductIds(Long memberId, List<Long> productIds) {
         return productIds.stream()
                 .filter(productId -> existsByMemberIdAndProductId(memberId, productId))
-                .collect(java.util.stream.Collectors.toSet());
+                .collect(Collectors.toSet());
+    }
+
+    @Override
+    public Set<Long> findLikedProductIdsByMemberId(Long memberId) {
+        return store.values().stream()
+                .filter(like -> like.getMemberId().equals(memberId))
+                .map(Like::getProductId)
+                .collect(Collectors.toSet());
     }
 
     public void clear() {

@@ -62,4 +62,15 @@ public class ProductV1Dto {
             @NotNull @Min(0) Integer page,
             @NotNull @Min(1) Integer size
     ) {}
+
+    public record CursorPageResponse<T>(
+            java.util.List<T> content,
+            String nextCursor,
+            boolean hasNext,
+            int size
+    ) {
+        public static <T> CursorPageResponse<T> of(java.util.List<T> content, String nextCursor, boolean hasNext) {
+            return new CursorPageResponse<>(content, nextCursor, hasNext, content.size());
+        }
+    }
 }

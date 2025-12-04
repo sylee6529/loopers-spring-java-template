@@ -9,14 +9,16 @@ import java.util.Optional;
 
 @Repository
 public interface LikeJpaRepository extends JpaRepository<Like, Long> {
-    
-    Optional<Like> findByMemberIdAndProductId(String memberId, Long productId);
-    
-    boolean existsByMemberIdAndProductId(String memberId, Long productId);
-    
+
+    Optional<Like> findByMemberIdAndProductId(Long memberId, Long productId);
+
+    boolean existsByMemberIdAndProductId(Long memberId, Long productId);
+
     long countByProductId(Long productId);
-    
-    void deleteByMemberIdAndProductId(String memberId, Long productId);
-    
-    List<Like> findByMemberIdAndProductIdIn(String memberId, List<Long> productIds);
+
+    void deleteByMemberIdAndProductId(Long memberId, Long productId);
+
+    List<Like> findByMemberIdAndProductIdIn(Long memberId, List<Long> productIds);
+
+    List<Like> findByMemberId(Long memberId);
 }

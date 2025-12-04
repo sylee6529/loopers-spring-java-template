@@ -67,6 +67,10 @@ public class Product extends BaseEntity {
         }
     }
 
+    public void setLikeCount(int likeCount) {
+        this.likeCount = likeCount;
+    }
+
     public boolean isStockAvailable(int requiredQuantity) {
         return this.stock.isAvailable(requiredQuantity);
     }
