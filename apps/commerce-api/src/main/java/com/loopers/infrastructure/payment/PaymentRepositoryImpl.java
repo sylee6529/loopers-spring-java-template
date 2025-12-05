@@ -1,5 +1,6 @@
 package com.loopers.infrastructure.payment;
 
+import com.loopers.domain.order.Order;
 import com.loopers.domain.payment.Payment;
 import com.loopers.domain.payment.PaymentRepository;
 import com.loopers.domain.payment.PaymentStatus;
@@ -29,8 +30,8 @@ public class PaymentRepositoryImpl implements PaymentRepository {
     }
 
     @Override
-    public Optional<Payment> findByOrderId(String orderId) {
-        return jpaRepository.findByOrderId(orderId);
+    public Optional<Payment> findByOrder(Order order) {
+        return jpaRepository.findByOrder(order);
     }
 
     @Override
@@ -39,8 +40,8 @@ public class PaymentRepositoryImpl implements PaymentRepository {
     }
 
     @Override
-    public boolean existsByOrderId(String orderId) {
-        return jpaRepository.existsByOrderId(orderId);
+    public boolean existsByOrder(Order order) {
+        return jpaRepository.existsByOrder(order);
     }
 
     @Override
