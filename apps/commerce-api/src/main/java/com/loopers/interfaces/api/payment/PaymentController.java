@@ -9,10 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * Payment API 컨트롤러
- * - 결제 요청, 조회, 상태 동기화
- */
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/payments")
@@ -21,11 +17,6 @@ public class PaymentController {
 
     private final PaymentFacade paymentFacade;
 
-    /**
-     * 결제 요청
-     *
-     * POST /api/v1/payments
-     */
     @PostMapping
     public ResponseEntity<PaymentResponse> requestPayment(
             @RequestHeader("X-USER-ID") String userId,
@@ -46,28 +37,18 @@ public class PaymentController {
         return ResponseEntity.ok(PaymentResponse.from(paymentInfo));
     }
 
-    /**
-     * orderId로 결제 정보 조회
-     *
-     * GET /api/v1/payments/orders/{orderId}
-     */
-    @GetMapping("/orders/{orderId}")
-    public ResponseEntity<PaymentResponse> getPaymentByOrderId(
+    @GetMapping("/orders/{orderNo}")
+    public ResponseEntity<PaymentResponse> getPaymentByOrderNo(
             @RequestHeader("X-USER-ID") String userId,
-            @PathVariable String orderId
+            @PathVariable String orderNo
     ) {
-        log.info("[Payment API] 결제 조회 - userId: {}, orderId: {}", userId, orderId);
+        log.info("[Payment API] 결제 조회 - userId: {}, orderNo: {}", userId, orderNo);
 
-        PaymentInfo paymentInfo = paymentFacade.getPaymentByOrderId(orderId);
+        PaymentInfo paymentInfo = paymentFacade.getPaymentByOrderNo(orderNo);
 
         return ResponseEntity.ok(PaymentResponse.from(paymentInfo));
     }
 
-    /**
-     * transactionKey로 결제 상태 동기화
-     *
-     * POST /api/v1/payments/{transactionKey}/sync
-     */
     @PostMapping("/{transactionKey}/sync")
     public ResponseEntity<PaymentResponse> syncPaymentStatus(
             @RequestHeader("X-USER-ID") String userId,
@@ -80,8 +61,6 @@ public class PaymentController {
         return ResponseEntity.ok(PaymentResponse.from(paymentInfo));
     }
 
-    // ========== DTOs ==========
-
     public record PaymentRequest(
             String orderId,
             CardType cardType,
@@ -92,7 +71,7 @@ public class PaymentController {
 
     public record PaymentResponse(
             Long id,
-            String orderId,
+            String orderNo,
             String transactionKey,
             String status,
             String cardType,
@@ -104,7 +83,7 @@ public class PaymentController {
         public static PaymentResponse from(PaymentInfo info) {
             return new PaymentResponse(
                     info.id(),
-                    info.orderId(),
+                    info.orderNo(),
                     info.transactionKey(),
                     info.status().name(),
                     info.cardType().name(),
