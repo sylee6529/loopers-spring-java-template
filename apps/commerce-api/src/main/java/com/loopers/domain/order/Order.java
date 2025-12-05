@@ -14,12 +14,23 @@ import java.util.List;
 
 @NoArgsConstructor
 @Entity
-@Table(name = "orders")
+@Table(name = "orders", indexes = {
+        @Index(name = "idx_order_no", columnList = "orderNo")
+})
 public class Order extends BaseEntity {
+
+    @Getter
+    @Column(name = "order_no", nullable = false, unique = true, length = 100)
+    private String orderNo;
 
     @Getter
     @Column(name = "member_id", nullable = false)
     private Long memberId;
+
+    @Getter
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private OrderStatus status;
 
     @Getter
     @Embedded
@@ -29,12 +40,14 @@ public class Order extends BaseEntity {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<OrderItem> items = new ArrayList<>();
 
-    private Order(Long memberId, List<OrderItem> items, Money totalPrice) {
+    private Order(String orderNo, Long memberId, List<OrderItem> items, Money totalPrice, OrderStatus status) {
         validateMemberId(memberId);
         validateItems(items);
         validateTotalPrice(totalPrice);
 
+        this.orderNo = orderNo;
         this.memberId = memberId;
+        this.status = status;
         this.totalPrice = totalPrice;
         this.items = new ArrayList<>();
         items.forEach(this::addItem);
@@ -44,14 +57,20 @@ public class Order extends BaseEntity {
         validateMemberId(memberId);
         validateItems(items);
         Money totalPrice = calculateTotalPrice(items);
-        return new Order(memberId, items, totalPrice);
+        String orderNo = generateOrderNo();
+        return new Order(orderNo, memberId, items, totalPrice, OrderStatus.PENDING_PAYMENT);
     }
 
     public static Order create(Long memberId, List<OrderItem> items, Money finalPrice) {
         validateMemberId(memberId);
         validateItems(items);
         validateTotalPrice(finalPrice);
-        return new Order(memberId, items, finalPrice);
+        String orderNo = generateOrderNo();
+        return new Order(orderNo, memberId, items, finalPrice, OrderStatus.PENDING_PAYMENT);
+    }
+
+    private static String generateOrderNo() {
+        return "ORD-" + java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
 
     private void addItem(OrderItem item) {
@@ -85,5 +104,30 @@ public class Order extends BaseEntity {
         if (totalPrice == null) {
             throw new CoreException(ErrorType.BAD_REQUEST, "총 금액은 필수입니다.");
         }
+    }
+
+    public void markAsPaid() {
+        if (this.status == OrderStatus.PAID) {
+            return;
+        }
+        if (this.status == OrderStatus.CANCELLED) {
+            throw new CoreException(ErrorType.BAD_REQUEST, "취소된 주문은 결제 완료로 변경할 수 없습니다.");
+        }
+        this.status = OrderStatus.PAID;
+    }
+
+    public void cancel() {
+        if (this.status == OrderStatus.PAID) {
+            throw new CoreException(ErrorType.BAD_REQUEST, "결제 완료된 주문은 취소할 수 없습니다.");
+        }
+        this.status = OrderStatus.CANCELLED;
+    }
+
+    public boolean isPendingPayment() {
+        return this.status == OrderStatus.PENDING_PAYMENT;
+    }
+
+    public boolean isPaid() {
+        return this.status == OrderStatus.PAID;
     }
 }

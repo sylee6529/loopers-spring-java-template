@@ -1,0 +1,62 @@
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        # Sliding Window 설정
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 10  # 최근 10개 호출을 기준으로 판단
+        minimumNumberOfCalls: 5  # 최소 5번 호출 후 Circuit Breaker 작동
+
+        # 실패율 임계값
+        failureRateThreshold: 50  # 실패율 50% 이상이면 OPEN
+        slowCallRateThreshold: 50  # 느린 호출 50% 이상이면 OPEN
+        slowCallDurationThreshold: 2s  # 2초 이상 걸리면 느린 호출로 간주
+
+        # Circuit Breaker 상태 전환
+        waitDurationInOpenState: 10s  # OPEN 상태에서 10초 후 HALF_OPEN으로 전환
+        permittedNumberOfCallsInHalfOpenState: 3  # HALF_OPEN에서 3번 테스트
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+
+        # 예외 설정
+        registerHealthIndicator: true
+        recordExceptions:
+          - java.util.concurrent.TimeoutException
+          - java.io.IOException
+          - org.springframework.web.client.ResourceAccessException
+          - org.springframework.web.client.HttpServerErrorException
+
+    instances:
+      pgSimulator:
+        baseConfig: default
+        failureRateThreshold: 60  # PG는 60% 실패율까지 허용 (40% 실패율 고려)
+        slowCallDurationThreshold: 1s  # PG는 1초 이상이면 느린 호출
+        waitDurationInOpenState: 15s  # OPEN 시 15초 대기
+
+  retry:
+    configs:
+      default:
+        maxAttempts: 3  # 최대 3번 재시도
+        waitDuration: 500ms  # 재시도 간격 500ms
+        enableExponentialBackoff: true  # 지수 백오프 활성화
+        exponentialBackoffMultiplier: 2  # 2배씩 증가
+        retryExceptions:
+          - java.util.concurrent.TimeoutException
+          - org.springframework.web.client.ResourceAccessException
+        ignoreExceptions:
+          - java.lang.IllegalArgumentException
+          - com.loopers.support.error.CoreException
+    instances:
+      pgSimulator:
+        baseConfig: default
+        maxAttempts: 1  # PG는 재시도 안 함 (멱등성 보장 어려움)
+        # Payment 엔티티 저장 후 requiresRetry 플래그로 수동 재시도 처리
+        waitDuration: 300ms
+
+  timelimiter:
+    configs:
+      default:
+        timeoutDuration: 3s  # 기본 타임아웃 3초
+        cancelRunningFuture: true
+    instances:
+      pgSimulator:
+        timeoutDuration: 2s  # PG 호출은 2초 타임아웃 (요청 지연 100-500ms 고려)

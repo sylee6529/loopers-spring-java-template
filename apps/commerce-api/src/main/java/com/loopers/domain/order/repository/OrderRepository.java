@@ -5,8 +5,10 @@ import com.loopers.domain.order.Order;
 import java.util.Optional;
 
 public interface OrderRepository {
-    
+
     Optional<Order> findById(Long id);
-    
+
+    Optional<Order> findByOrderNo(String orderNo);
+
     Order save(Order order);
 }
