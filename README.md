@@ -27,7 +27,8 @@ docker-compose -f ./docker/monitoring-compose.yml up
 Root
 ├── apps ( spring-applications )
 │   ├── 📦 commerce-api
-│   └── 📦 commerce-streamer
+│   ├── 📦 commerce-streamer
+│   └── 📦 pg-simulator
 ├── modules ( reusable-configurations )
 │   ├── 📦 jpa
 │   ├── 📦 redis
@@ -37,3 +38,25 @@ Root
     ├── 📦 monitoring
     └── 📦 logging
 ```
+
+## PG Payment System
+
+완전한 결제 시스템 구현 (Resilience 패턴 적용)
+
+### 빠른 시작
+```shell
+# PG Simulator 실행
+./gradlew :apps:pg-simulator:bootRun
+
+# Commerce API 실행
+./gradlew :apps:commerce-api:bootRun
+
+# 테스트
+curl -X POST http://localhost:8080/api/v1/payments/test/request \
+  -H "X-USER-ID: 12345" -H "Content-Type: application/json" \
+  -d '{"orderId":"ORDER-001","cardType":"SAMSUNG","cardNo":"1234-5678-9012-3456","amount":50000}'
+```
+
+### 문서
+- **PAYMENT-GUIDE.md**: 전체 가이드 (구현 사항, API, 테스트)
+- **test-payment-flow.http**: HTTP 테스트 시나리오
