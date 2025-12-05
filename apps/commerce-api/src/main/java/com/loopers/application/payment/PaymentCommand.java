@@ -2,14 +2,8 @@ package com.loopers.application.payment;
 
 import com.loopers.domain.payment.CardType;
 
-/**
- * Payment 관련 Command 객체들
- */
 public class PaymentCommand {
 
-    /**
-     * PG 결제 요청 Command
-     */
     public record RequestPayment(
             String orderId,
             CardType cardType,
@@ -36,9 +30,6 @@ public class PaymentCommand {
         }
     }
 
-    /**
-     * PG 콜백 처리 Command
-     */
     public record ProcessCallback(
             String transactionKey,
             String status,

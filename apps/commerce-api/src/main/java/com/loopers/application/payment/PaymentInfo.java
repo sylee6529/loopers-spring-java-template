@@ -6,12 +6,9 @@ import com.loopers.domain.payment.PaymentStatus;
 
 import java.time.ZonedDateTime;
 
-/**
- * Payment 정보 전달 객체
- */
 public record PaymentInfo(
         Long id,
-        String orderId,
+        String orderNo,
         String transactionKey,
         PaymentStatus status,
         CardType cardType,
@@ -24,7 +21,7 @@ public record PaymentInfo(
     public static PaymentInfo from(Payment payment) {
         return new PaymentInfo(
                 payment.getId(),
-                payment.getOrderId(),
+                payment.getOrder().getOrderNo(),
                 payment.getTransactionKey(),
                 payment.getStatus(),
                 payment.getCardType(),
