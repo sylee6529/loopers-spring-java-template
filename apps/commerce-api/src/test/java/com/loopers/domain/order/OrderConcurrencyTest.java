@@ -76,10 +76,15 @@ class OrderConcurrencyTest {
         int threadCount = 10;
 
         // 10명의 회원 생성 및 포인트 부여
+        Long[] memberIds = new Long[threadCount];
         for (int i = 0; i < threadCount; i++) {
-            String memberId = "member" + i;
-            memberFacade.registerMember(memberId, memberId + "@test.com", "password", "1990-01-01", Gender.MALE);
+            String username = "member" + i;
+            memberFacade.registerMember(username, username + "@test.com", "password", "1990-01-01", Gender.MALE);
             // MemberFacade가 이미 Point를 0원으로 생성했으므로 업데이트
+            // Member IDs are assigned sequentially starting from 1L
+            Long memberId = (long) (i + 1);
+            memberIds[i] = memberId;
+
             Point existingPoint = pointRepository.findByMemberId(memberId).orElseThrow();
             existingPoint.addAmount(BigDecimal.valueOf(10000));
             pointRepository.save(existingPoint);
@@ -92,7 +97,7 @@ class OrderConcurrencyTest {
         // when: 10명이 동시에 1개씩 주문
         try (ExecutorService executorService = Executors.newFixedThreadPool(threadCount)) {
             for (int i = 0; i < threadCount; i++) {
-                final String memberId = "member" + i;
+                final Long memberId = memberIds[i];
                 executorService.submit(() -> {
                     try {
                         OrderCommand command = OrderCommand.of(
@@ -139,10 +144,14 @@ class OrderConcurrencyTest {
         int threadCount = 10;
 
         // 10명의 회원 생성 및 포인트 부여
+        Long[] memberIds2 = new Long[threadCount];
         for (int i = 0; i < threadCount; i++) {
-            String memberId = "member" + i;
-            memberFacade.registerMember(memberId, memberId + "@test.com", "password", "1990-01-01", Gender.MALE);
-            // MemberFacade가 이미 Point를 0원으로 생성했으므로 업데이트
+            String username = "member" + i;
+            memberFacade.registerMember(username, username + "@test.com", "password", "1990-01-01", Gender.MALE);
+            // Member IDs are assigned sequentially starting from 1L
+            Long memberId = (long) (i + 1);
+            memberIds2[i] = memberId;
+
             Point existingPoint = pointRepository.findByMemberId(memberId).orElseThrow();
             existingPoint.addAmount(BigDecimal.valueOf(10000));
             pointRepository.save(existingPoint);
@@ -155,7 +164,7 @@ class OrderConcurrencyTest {
         // when: 10명이 동시에 1개씩 주문 (재고는 5개)
         try (ExecutorService executorService = Executors.newFixedThreadPool(threadCount)) {
             for (int i = 0; i < threadCount; i++) {
-                final String memberId = "member" + i;
+                final Long memberId = memberIds2[i];
                 executorService.submit(() -> {
                     try {
                         OrderCommand command = OrderCommand.of(
@@ -209,9 +218,14 @@ class OrderConcurrencyTest {
         int threadCount = 5;
 
         // 5명의 회원 생성 및 포인트 부여
+        Long[] memberIds3 = new Long[threadCount];
         for (int i = 0; i < threadCount; i++) {
-            String memberId = "member" + i;
-            memberFacade.registerMember(memberId, memberId + "@test.com", "password", "1990-01-01", Gender.MALE);
+            String username = "member" + i;
+            memberFacade.registerMember(username, username + "@test.com", "password", "1990-01-01", Gender.MALE);
+            // Member IDs are assigned sequentially starting from 1L
+            Long memberId = (long) (i + 1);
+            memberIds3[i] = memberId;
+
             Point existingPoint = pointRepository.findByMemberId(memberId).orElseThrow();
             existingPoint.addAmount(BigDecimal.valueOf(50000));
             pointRepository.save(existingPoint);
@@ -222,7 +236,7 @@ class OrderConcurrencyTest {
         // when: 5명이 동시에 각 상품 2개씩 주문
         try (ExecutorService executorService = Executors.newFixedThreadPool(threadCount)) {
             for (int i = 0; i < threadCount; i++) {
-                final String memberId = "member" + i;
+                final Long memberId = memberIds3[i];
                 executorService.submit(() -> {
                     try {
                         OrderCommand command = OrderCommand.of(

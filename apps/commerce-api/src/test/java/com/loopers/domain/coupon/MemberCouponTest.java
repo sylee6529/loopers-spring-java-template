@@ -21,7 +21,7 @@ class MemberCouponTest {
         @Test
         void shouldIssueMemberCoupon() {
             Coupon coupon = Coupon.createFixedCoupon("1000원 할인", BigDecimal.valueOf(1000));
-            String memberId = "member123";
+            Long memberId = 123L;
 
             MemberCoupon memberCoupon = MemberCoupon.issue(memberId, coupon);
 
@@ -30,12 +30,12 @@ class MemberCouponTest {
             assertThat(memberCoupon.isUsed()).isFalse();
         }
 
-        @DisplayName("회원 ID가 비어있으면 예외가 발생한다")
+        @DisplayName("회원 ID가 null이면 예외가 발생한다")
         @Test
         void shouldThrowException_whenMemberIdIsEmpty() {
             Coupon coupon = Coupon.createFixedCoupon("1000원 할인", BigDecimal.valueOf(1000));
 
-            assertThatThrownBy(() -> MemberCoupon.issue("", coupon))
+            assertThatThrownBy(() -> MemberCoupon.issue(null, coupon))
                     .isInstanceOf(CoreException.class)
                     .hasMessageContaining("회원 ID는 필수입니다");
         }
@@ -43,7 +43,7 @@ class MemberCouponTest {
         @DisplayName("쿠폰이 null이면 예외가 발생한다")
         @Test
         void shouldThrowException_whenCouponIsNull() {
-            assertThatThrownBy(() -> MemberCoupon.issue("member123", null))
+            assertThatThrownBy(() -> MemberCoupon.issue(123L, null))
                     .isInstanceOf(CoreException.class)
                     .hasMessageContaining("쿠폰 정보는 필수입니다");
         }
@@ -57,7 +57,7 @@ class MemberCouponTest {
         @Test
         void shouldMarkAsUsed() {
             Coupon coupon = Coupon.createFixedCoupon("1000원 할인", BigDecimal.valueOf(1000));
-            MemberCoupon memberCoupon = MemberCoupon.issue("member123", coupon);
+            MemberCoupon memberCoupon = MemberCoupon.issue(123L, coupon);
 
             memberCoupon.use();
 
@@ -68,7 +68,7 @@ class MemberCouponTest {
         @Test
         void shouldThrowException_whenAlreadyUsed() {
             Coupon coupon = Coupon.createFixedCoupon("1000원 할인", BigDecimal.valueOf(1000));
-            MemberCoupon memberCoupon = MemberCoupon.issue("member123", coupon);
+            MemberCoupon memberCoupon = MemberCoupon.issue(123L, coupon);
             memberCoupon.use();
 
             assertThatThrownBy(memberCoupon::use)
@@ -85,7 +85,7 @@ class MemberCouponTest {
         @Test
         void shouldPassValidation_whenUsable() {
             Coupon coupon = Coupon.createFixedCoupon("1000원 할인", BigDecimal.valueOf(1000));
-            MemberCoupon memberCoupon = MemberCoupon.issue("member123", coupon);
+            MemberCoupon memberCoupon = MemberCoupon.issue(123L, coupon);
 
             memberCoupon.validateUsable();
 
@@ -96,7 +96,7 @@ class MemberCouponTest {
         @Test
         void shouldThrowException_whenNotUsable() {
             Coupon coupon = Coupon.createFixedCoupon("1000원 할인", BigDecimal.valueOf(1000));
-            MemberCoupon memberCoupon = MemberCoupon.issue("member123", coupon);
+            MemberCoupon memberCoupon = MemberCoupon.issue(123L, coupon);
             memberCoupon.use();
 
             assertThatThrownBy(memberCoupon::validateUsable)
@@ -113,18 +113,18 @@ class MemberCouponTest {
         @Test
         void shouldPassValidation_whenOwner() {
             Coupon coupon = Coupon.createFixedCoupon("1000원 할인", BigDecimal.valueOf(1000));
-            MemberCoupon memberCoupon = MemberCoupon.issue("member123", coupon);
+            MemberCoupon memberCoupon = MemberCoupon.issue(123L, coupon);
 
-            memberCoupon.validateOwnership("member123");
+            memberCoupon.validateOwnership(123L);
         }
 
         @DisplayName("소유자가 아닌 경우 예외가 발생한다")
         @Test
         void shouldThrowException_whenNotOwner() {
             Coupon coupon = Coupon.createFixedCoupon("1000원 할인", BigDecimal.valueOf(1000));
-            MemberCoupon memberCoupon = MemberCoupon.issue("member123", coupon);
+            MemberCoupon memberCoupon = MemberCoupon.issue(123L, coupon);
 
-            assertThatThrownBy(() -> memberCoupon.validateOwnership("otherMember"))
+            assertThatThrownBy(() -> memberCoupon.validateOwnership(999L))
                     .isInstanceOf(CoreException.class)
                     .hasMessageContaining("본인의 쿠폰만 사용할 수 있습니다");
         }
@@ -138,7 +138,7 @@ class MemberCouponTest {
         @Test
         void shouldDelegateToLinkedCoupon() {
             Coupon coupon = Coupon.createFixedCoupon("1000원 할인", BigDecimal.valueOf(1000));
-            MemberCoupon memberCoupon = MemberCoupon.issue("member123", coupon);
+            MemberCoupon memberCoupon = MemberCoupon.issue(123L, coupon);
             Money originalPrice = Money.of(10000);
 
             Money discount = memberCoupon.calculateDiscount(originalPrice);

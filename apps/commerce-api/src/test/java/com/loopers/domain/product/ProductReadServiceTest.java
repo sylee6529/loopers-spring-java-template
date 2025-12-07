@@ -59,7 +59,7 @@ class ProductReadServiceTest {
         void shouldGetProductDetail_whenValidInput() {
             // given
             Long productId = 1L;
-            String memberId = "member1";
+            Long memberId = 1L;
             Long brandId = 1L;
 
             Product product = createProduct(brandId);
@@ -93,7 +93,7 @@ class ProductReadServiceTest {
         void shouldGetProductDetail_whenMemberIdIsNull() {
             // given
             Long productId = 1L;
-            String memberId = null;
+            Long memberId = null;
             Long brandId = 1L;
 
             Product product = createProduct(brandId);
@@ -127,7 +127,7 @@ class ProductReadServiceTest {
         void shouldThrowException_whenProductNotFound() {
             // given
             Long productId = 999L;
-            String memberId = "member1";
+            Long memberId = 1L;
 
             given(productRepository.findById(productId)).willReturn(Optional.empty());
 
@@ -146,7 +146,7 @@ class ProductReadServiceTest {
         void shouldThrowException_whenBrandNotFound() {
             // given
             Long productId = 1L;
-            String memberId = "member1";
+            Long memberId = 1L;
             Long brandId = 999L;
 
             Product product = createProduct(brandId);
@@ -175,7 +175,7 @@ class ProductReadServiceTest {
             // given
             ProductSearchFilter filter = ProductSearchFilter.builder().build();
             Pageable pageable = PageRequest.of(0, 10);
-            String memberId = "member1";
+            Long memberId = 1L;
 
             Product product1 = createProduct(1L);
             Product product2 = createProduct(2L);
@@ -220,7 +220,7 @@ class ProductReadServiceTest {
                     .brandId(brandId)
                     .build();
             Pageable pageable = PageRequest.of(0, 10);
-            String memberId = "member1";
+            Long memberId = 1L;
 
             Product product1 = createProduct(brandId);
             Product product2 = createProduct(brandId);
@@ -254,7 +254,7 @@ class ProductReadServiceTest {
                     .keyword(keyword)
                     .build();
             Pageable pageable = PageRequest.of(0, 10);
-            String memberId = "member1";
+            Long memberId = 1L;
 
             Product product = createProduct(brandId);
             Brand brand = createBrand(brandId);
@@ -282,7 +282,7 @@ class ProductReadServiceTest {
             // given
             ProductSearchFilter filter = ProductSearchFilter.builder().build();
             Pageable pageable = PageRequest.of(0, 10);
-            String memberId = null;
+            Long memberId = null;
 
             Product product = createProduct(1L);
             Brand brand = createBrand();
@@ -309,7 +309,7 @@ class ProductReadServiceTest {
             // given
             ProductSearchFilter filter = ProductSearchFilter.builder().build();
             Pageable pageable = PageRequest.of(0, 10);
-            String memberId = "member1";
+            Long memberId = 1L;
 
             Product product = createProduct(999L);
             Page<Product> productPage = new PageImpl<>(List.of(product));
@@ -332,7 +332,7 @@ class ProductReadServiceTest {
             // given
             ProductSearchFilter filter = ProductSearchFilter.builder().build();
             Pageable pageable = PageRequest.of(0, 10);
-            String memberId = "member1";
+            Long memberId = 1L;
 
             Page<Product> emptyPage = new PageImpl<>(List.of());
 
@@ -359,7 +359,7 @@ class ProductReadServiceTest {
         @Test
         void shouldGetPopularProducts_whenValidInput() {
             // given
-            String memberId = "member1";
+            Long memberId = 1L;
 
             // 좋아요 수가 다른 여러 상품 생성
             Product product1 = createProductWithLikeCount(1L, 100);
@@ -402,7 +402,7 @@ class ProductReadServiceTest {
         @Test
         void shouldGetPopularProducts_whenMemberIdIsNull() {
             // given
-            String memberId = null;
+            Long memberId = null;
 
             Product product1 = createProductWithLikeCount(1L, 100);
             Product product2 = createProductWithLikeCount(2L, 80);
@@ -432,7 +432,7 @@ class ProductReadServiceTest {
         @Test
         void shouldReturnAllProducts_whenLessThan100Products() {
             // given
-            String memberId = "member1";
+            Long memberId = 1L;
 
             Product product1 = createProductWithLikeCount(1L, 50);
             Product product2 = createProductWithLikeCount(2L, 30);
@@ -459,7 +459,7 @@ class ProductReadServiceTest {
         @Test
         void shouldReturnEmptyList_whenNoProducts() {
             // given
-            String memberId = "member1";
+            Long memberId = 1L;
 
             given(productRepository.findTopByLikeCount(100)).willReturn(List.of());
 
@@ -484,7 +484,7 @@ class ProductReadServiceTest {
         void shouldGetBrandPopularProducts_whenValidInput() {
             // given
             Long brandId = 1L;
-            String memberId = "member1";
+            Long memberId = 1L;
             int limit = 5;
 
             Product product1 = createProductWithLikeCount(1L, 100);
@@ -522,7 +522,7 @@ class ProductReadServiceTest {
         void shouldGetBrandPopularProducts_whenMemberIdIsNull() {
             // given
             Long brandId = 1L;
-            String memberId = null;
+            Long memberId = null;
             int limit = 10;
 
             Product product1 = createProductWithLikeCount(1L, 100);
@@ -553,7 +553,7 @@ class ProductReadServiceTest {
         void shouldReturnEmptyList_whenNoProducts() {
             // given
             Long brandId = 1L;
-            String memberId = "member1";
+            Long memberId = 1L;
             int limit = 10;
 
             Brand brand = createBrand(brandId);
@@ -577,7 +577,7 @@ class ProductReadServiceTest {
         void shouldThrowException_whenBrandNotFound() {
             // given
             Long brandId = 999L;
-            String memberId = "member1";
+            Long memberId = 1L;
             int limit = 10;
 
             given(brandRepository.findById(brandId)).willReturn(Optional.empty());
@@ -602,7 +602,7 @@ class ProductReadServiceTest {
         void shouldCallAllCollaborators_whenGetProductDetail() {
             // given
             Long productId = 1L;
-            String memberId = "member1";
+            Long memberId = 1L;
             Long brandId = 1L;
 
             Product product = createProduct(brandId);
@@ -627,7 +627,7 @@ class ProductReadServiceTest {
             // given
             ProductSearchFilter filter = ProductSearchFilter.builder().build();
             Pageable pageable = PageRequest.of(0, 2);
-            String memberId = "member1";
+            Long memberId = 1L;
 
             Product product1 = createProduct(1L);
             Product product2 = createProduct(2L);

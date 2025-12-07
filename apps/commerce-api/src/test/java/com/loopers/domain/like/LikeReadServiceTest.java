@@ -1,29 +1,33 @@
 package com.loopers.domain.like;
 
 import com.loopers.domain.like.service.LikeReadService;
+import com.loopers.infrastructure.cache.MemberLikesCache;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class LikeReadServiceTest {
 
     private InMemoryLikeRepository likeRepository;
+    private MemberLikesCache memberLikesCache;
     private LikeReadService likeReadService;
 
     @BeforeEach
     void setUp() {
         likeRepository = new InMemoryLikeRepository();
-        likeReadService = new LikeReadService(likeRepository);
+        memberLikesCache = mock(MemberLikesCache.class);
+        likeReadService = new LikeReadService(likeRepository, memberLikesCache);
     }
 
     @Test
     void should_count_likes_by_product_id() {
         // given
         Long productId = 1L;
-        likeRepository.save(new Like("member1", productId));
-        likeRepository.save(new Like("member2", productId));
-        likeRepository.save(new Like("member3", 2L)); // 다른 상품
+        likeRepository.save(new Like(1L, productId));
+        likeRepository.save(new Like(2L, productId));
+        likeRepository.save(new Like(3L, 2L)); // 다른 상품
 
         // when
         long count = likeReadService.countByProductId(productId);
@@ -47,7 +51,7 @@ class LikeReadServiceTest {
     @Test
     void should_check_if_member_liked_product() {
         // given
-        String memberId = "member1";
+        Long memberId = 1L;
         Long productId = 1L;
         likeRepository.save(new Like(memberId, productId));
 
@@ -61,7 +65,7 @@ class LikeReadServiceTest {
     @Test
     void should_return_false_when_member_did_not_like_product() {
         // given
-        String memberId = "member1";
+        Long memberId = 1L;
         Long productId = 1L;
 
         // when
@@ -74,9 +78,9 @@ class LikeReadServiceTest {
     @Test
     void should_return_false_when_member_id_is_null() {
         // given
-        String memberId = null;
+        Long memberId = null;
         Long productId = 1L;
-        likeRepository.save(new Like("member1", productId));
+        likeRepository.save(new Like(1L, productId));
 
         // when
         boolean isLiked = likeReadService.isLikedBy(memberId, productId);
@@ -88,10 +92,10 @@ class LikeReadServiceTest {
     @Test
     void should_not_check_other_members_likes() {
         // given
-        String memberId1 = "member1";
-        String memberId2 = "member2";
+        Long memberId1 = 1L;
+        Long memberId2 = 2L;
         Long productId = 1L;
-        
+
         likeRepository.save(new Like(memberId1, productId));
 
         // when

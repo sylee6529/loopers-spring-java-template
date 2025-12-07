@@ -70,8 +70,11 @@ class OrderV1ApiE2ETest {
         // 회원 생성
         memberFacade.registerMember("test123", "test@example.com", "password", "1990-01-01", Gender.MALE);
 
+        // Member ID is 1L (first member created after table truncation)
+        Long memberId = 1L;
+
         // 충분한 포인트 지급 (기존 포인트를 조회하여 추가)
-        Point memberPoint = pointRepository.findByMemberId("test123")
+        Point memberPoint = pointRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new IllegalStateException("회원의 포인트가 존재하지 않습니다"));
         memberPoint.addAmount(BigDecimal.valueOf(50000));
         pointRepository.save(memberPoint);

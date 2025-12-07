@@ -85,14 +85,15 @@ public class OrderServiceIntegrationTest {
         void createOrder_success() {
 
             // given
-            memberRepository.save(createMember("user1"));
+            Member member = memberRepository.save(createMember("user1"));
+            Long memberId = member.getId();
             Product p1 = productRepository.save(createProduct(1L, "아메리카노", 3000L, 100));
             Product p2 = productRepository.save(createProduct(1L, "라떼", 4000L, 200));
 
-            pointRepository.save(Point.create("user1", BigDecimal.valueOf(20000L)));
+            pointRepository.save(Point.create(memberId, BigDecimal.valueOf(20000L)));
 
             OrderCommand command = OrderCommand.of(
-                    "user1",
+                    memberId,
                     List.of(
                             OrderLineCommand.of(p1.getId(), 2),  // 6000원
                             OrderLineCommand.of(p2.getId(), 1)   // 4000원
@@ -116,7 +117,7 @@ public class OrderServiceIntegrationTest {
             assertThat(updated2.getStock().getQuantity()).isEqualTo(199);
 
             // 포인트 감소 확인 (entityManager.clear() 이후이므로 새로운 조회 필요)
-            Point point = pointRepository.findByMemberId("user1").get();
+            Point point = pointRepository.findByMemberId(memberId).get();
             // 트랜잭션 내에서 포인트 차감이 일어났지만, @Transactional 테스트이므로
             // 실제 DB에는 커밋 전 상태. 대신 엔티티 상태로 확인
             assertThat(point.getAmount()).isNotNull();
@@ -132,12 +133,13 @@ public class OrderServiceIntegrationTest {
         @Transactional
         @DisplayName("재고 부족으로 실패")
         void insufficientStock_fail() {
-            memberRepository.save(createMember("user1"));
+            Member member = memberRepository.save(createMember("user1"));
+            Long memberId = member.getId();
             Product item = productRepository.save(createProduct(1L, "상품", 1000L, 1));
-            pointRepository.save(Point.create("user1", BigDecimal.valueOf(5000L)));
+            pointRepository.save(Point.create(memberId, BigDecimal.valueOf(5000L)));
 
             OrderCommand command = OrderCommand.of(
-                    "user1",
+                    memberId,
                     List.of(OrderLineCommand.of(item.getId(), 5))
             );
 
@@ -149,12 +151,13 @@ public class OrderServiceIntegrationTest {
         @Transactional
         @DisplayName("포인트 부족으로 실패")
         void insufficientPoint_fail() {
-            memberRepository.save(createMember("user1"));
+            Member member = memberRepository.save(createMember("user1"));
+            Long memberId = member.getId();
             Product item = productRepository.save(createProduct(1L, "상품", 1000L, 10));
-            pointRepository.save(Point.create("user1", BigDecimal.valueOf(2000L))); // 부족
+            pointRepository.save(Point.create(memberId, BigDecimal.valueOf(2000L))); // 부족
 
             OrderCommand command = OrderCommand.of(
-                    "user1",
+                    memberId,
                     List.of(OrderLineCommand.of(item.getId(), 5)) // 총 5000원
             );
 
@@ -166,11 +169,12 @@ public class OrderServiceIntegrationTest {
         @Transactional
         @DisplayName("없는 상품 주문 시 실패")
         void noProduct_fail() {
-            memberRepository.save(createMember("user1"));
-            pointRepository.save(Point.create("user1", BigDecimal.valueOf(10000L)));
+            Member member = memberRepository.save(createMember("user1"));
+            Long memberId = member.getId();
+            pointRepository.save(Point.create(memberId, BigDecimal.valueOf(10000L)));
 
             OrderCommand command = OrderCommand.of(
-                    "user1",
+                    memberId,
                     List.of(OrderLineCommand.of(999L, 1))
             );
 
@@ -182,11 +186,12 @@ public class OrderServiceIntegrationTest {
         @Transactional
         @DisplayName("유저 포인트 정보 없으면 실패")
         void noUserPoint_fail() {
-            memberRepository.save(createMember("user1"));
+            Member member = memberRepository.save(createMember("user1"));
+            Long memberId = member.getId();
             Product item = productRepository.save(createProduct(1L, "상품", 1000L, 10));
 
             OrderCommand command = OrderCommand.of(
-                    "user1",
+                    memberId,
                     List.of(OrderLineCommand.of(item.getId(), 1))
             );
 
@@ -203,15 +208,16 @@ public class OrderServiceIntegrationTest {
         @DisplayName("정액 쿠폰 적용 시 할인된 금액으로 결제된다")
         void fixedCoupon_success() {
             // given
-            memberRepository.save(createMember("user1"));
+            Member member = memberRepository.save(createMember("user1"));
+            Long memberId = member.getId();
             Product item = productRepository.save(createProduct(1L, "상품", 10000L, 10));
-            pointRepository.save(Point.create("user1", BigDecimal.valueOf(20000L)));
+            pointRepository.save(Point.create(memberId, BigDecimal.valueOf(20000L)));
 
             Coupon coupon = couponRepository.save(Coupon.createFixedCoupon("1000원 할인", BigDecimal.valueOf(1000)));
-            MemberCoupon memberCoupon = memberCouponRepository.save(MemberCoupon.issue("user1", coupon));
+            MemberCoupon memberCoupon = memberCouponRepository.save(MemberCoupon.issue(memberId, coupon));
 
             OrderCommand command = OrderCommand.of(
-                    "user1",
+                    memberId,
                     List.of(OrderLineCommand.of(item.getId(), 1)),
                     memberCoupon.getId()
             );
@@ -228,7 +234,7 @@ public class OrderServiceIntegrationTest {
             assertThat(usedCoupon.isUsed()).isTrue();
 
             // 포인트 차감 확인 (9000원만 차감됨)
-            Point point = pointRepository.findByMemberId("user1").orElseThrow();
+            Point point = pointRepository.findByMemberId(memberId).orElseThrow();
             assertThat(point.getAmount()).isEqualByComparingTo(BigDecimal.valueOf(11000)); // 20000 - 9000
         }
 
@@ -236,15 +242,16 @@ public class OrderServiceIntegrationTest {
         @DisplayName("정률 쿠폰 적용 시 할인된 금액으로 결제된다")
         void percentageCoupon_success() {
             // given
-            memberRepository.save(createMember("user1"));
+            Member member = memberRepository.save(createMember("user1"));
+            Long memberId = member.getId();
             Product item = productRepository.save(createProduct(1L, "상품", 10000L, 10));
-            pointRepository.save(Point.create("user1", BigDecimal.valueOf(20000L)));
+            pointRepository.save(Point.create(memberId, BigDecimal.valueOf(20000L)));
 
             Coupon coupon = couponRepository.save(Coupon.createPercentageCoupon("10% 할인", BigDecimal.valueOf(10)));
-            MemberCoupon memberCoupon = memberCouponRepository.save(MemberCoupon.issue("user1", coupon));
+            MemberCoupon memberCoupon = memberCouponRepository.save(MemberCoupon.issue(memberId, coupon));
 
             OrderCommand command = OrderCommand.of(
-                    "user1",
+                    memberId,
                     List.of(OrderLineCommand.of(item.getId(), 1)),
                     memberCoupon.getId()
             );
@@ -257,7 +264,7 @@ public class OrderServiceIntegrationTest {
             assertThat(saved.getTotalPrice()).isEqualTo(Money.of(9000L)); // 10000 * 0.9 = 9000
 
             // 포인트 차감 확인
-            Point point = pointRepository.findByMemberId("user1").orElseThrow();
+            Point point = pointRepository.findByMemberId(memberId).orElseThrow();
             assertThat(point.getAmount()).isEqualByComparingTo(BigDecimal.valueOf(11000)); // 20000 - 9000
         }
 
@@ -265,12 +272,13 @@ public class OrderServiceIntegrationTest {
         @DisplayName("존재하지 않는 쿠폰으로 주문 시 실패한다")
         void nonExistentCoupon_fail() {
             // given
-            memberRepository.save(createMember("user1"));
+            Member member = memberRepository.save(createMember("user1"));
+            Long memberId = member.getId();
             Product item = productRepository.save(createProduct(1L, "상품", 10000L, 10));
-            pointRepository.save(Point.create("user1", BigDecimal.valueOf(20000L)));
+            pointRepository.save(Point.create(memberId, BigDecimal.valueOf(20000L)));
 
             OrderCommand command = OrderCommand.of(
-                    "user1",
+                    memberId,
                     List.of(OrderLineCommand.of(item.getId(), 1)),
                     999L // 존재하지 않는 쿠폰 ID
             );
@@ -284,17 +292,18 @@ public class OrderServiceIntegrationTest {
         @DisplayName("이미 사용된 쿠폰으로 주문 시 실패한다")
         void alreadyUsedCoupon_fail() {
             // given
-            memberRepository.save(createMember("user1"));
+            Member member = memberRepository.save(createMember("user1"));
+            Long memberId = member.getId();
             Product item = productRepository.save(createProduct(1L, "상품", 10000L, 10));
-            pointRepository.save(Point.create("user1", BigDecimal.valueOf(20000L)));
+            pointRepository.save(Point.create(memberId, BigDecimal.valueOf(20000L)));
 
             Coupon coupon = couponRepository.save(Coupon.createFixedCoupon("1000원 할인", BigDecimal.valueOf(1000)));
-            MemberCoupon memberCoupon = MemberCoupon.issue("user1", coupon);
+            MemberCoupon memberCoupon = MemberCoupon.issue(memberId, coupon);
             memberCoupon.use(); // 이미 사용 처리
             memberCouponRepository.save(memberCoupon);
 
             OrderCommand command = OrderCommand.of(
-                    "user1",
+                    memberId,
                     List.of(OrderLineCommand.of(item.getId(), 1)),
                     memberCoupon.getId()
             );
@@ -308,16 +317,18 @@ public class OrderServiceIntegrationTest {
         @DisplayName("다른 회원의 쿠폰으로 주문 시 실패한다")
         void otherMemberCoupon_fail() {
             // given
-            memberRepository.save(createMember("user1"));
-            memberRepository.save(createMember("user2"));
+            Member member1 = memberRepository.save(createMember("user1"));
+            Long memberId1 = member1.getId();
+            Member member2 = memberRepository.save(createMember("user2"));
+            Long memberId2 = member2.getId();
             Product item = productRepository.save(createProduct(1L, "상품", 10000L, 10));
-            pointRepository.save(Point.create("user1", BigDecimal.valueOf(20000L)));
+            pointRepository.save(Point.create(memberId1, BigDecimal.valueOf(20000L)));
 
             Coupon coupon = couponRepository.save(Coupon.createFixedCoupon("1000원 할인", BigDecimal.valueOf(1000)));
-            MemberCoupon memberCoupon = memberCouponRepository.save(MemberCoupon.issue("user2", coupon)); // user2의 쿠폰
+            MemberCoupon memberCoupon = memberCouponRepository.save(MemberCoupon.issue(memberId2, coupon)); // user2의 쿠폰
 
             OrderCommand command = OrderCommand.of(
-                    "user1", // user1이 user2의 쿠폰 사용 시도
+                    memberId1, // user1이 user2의 쿠폰 사용 시도
                     List.of(OrderLineCommand.of(item.getId(), 1)),
                     memberCoupon.getId()
             );
@@ -331,15 +342,16 @@ public class OrderServiceIntegrationTest {
         @DisplayName("할인 금액이 주문 금액보다 클 경우 0원으로 결제된다")
         void discountExceedsPrice_zeroPayment() {
             // given
-            memberRepository.save(createMember("user1"));
+            Member member = memberRepository.save(createMember("user1"));
+            Long memberId = member.getId();
             Product item = productRepository.save(createProduct(1L, "상품", 1000L, 10));
-            pointRepository.save(Point.create("user1", BigDecimal.valueOf(20000L)));
+            pointRepository.save(Point.create(memberId, BigDecimal.valueOf(20000L)));
 
             Coupon coupon = couponRepository.save(Coupon.createFixedCoupon("5000원 할인", BigDecimal.valueOf(5000)));
-            MemberCoupon memberCoupon = memberCouponRepository.save(MemberCoupon.issue("user1", coupon));
+            MemberCoupon memberCoupon = memberCouponRepository.save(MemberCoupon.issue(memberId, coupon));
 
             OrderCommand command = OrderCommand.of(
-                    "user1",
+                    memberId,
                     List.of(OrderLineCommand.of(item.getId(), 1)), // 1000원 상품
                     memberCoupon.getId()
             );
@@ -352,7 +364,7 @@ public class OrderServiceIntegrationTest {
             assertThat(saved.getTotalPrice()).isEqualTo(Money.of(0L)); // 1000 - 1000(최대 할인) = 0
 
             // 포인트 차감 없음
-            Point point = pointRepository.findByMemberId("user1").orElseThrow();
+            Point point = pointRepository.findByMemberId(memberId).orElseThrow();
             assertThat(point.getAmount()).isEqualByComparingTo(BigDecimal.valueOf(20000)); // 변동 없음
         }
 
@@ -360,15 +372,16 @@ public class OrderServiceIntegrationTest {
         @DisplayName("쿠폰 적용 주문 실패 시 쿠폰 상태가 롤백된다")
         void couponRollback_onOrderFailure() {
             // given
-            memberRepository.save(createMember("user1"));
+            Member member = memberRepository.save(createMember("user1"));
+            Long memberId = member.getId();
             Product item = productRepository.save(createProduct(1L, "상품", 10000L, 1)); // 재고 1개
-            pointRepository.save(Point.create("user1", BigDecimal.valueOf(20000L)));
+            pointRepository.save(Point.create(memberId, BigDecimal.valueOf(20000L)));
 
             Coupon coupon = couponRepository.save(Coupon.createFixedCoupon("1000원 할인", BigDecimal.valueOf(1000)));
-            MemberCoupon memberCoupon = memberCouponRepository.save(MemberCoupon.issue("user1", coupon));
+            MemberCoupon memberCoupon = memberCouponRepository.save(MemberCoupon.issue(memberId, coupon));
 
             OrderCommand command = OrderCommand.of(
-                    "user1",
+                    memberId,
                     List.of(OrderLineCommand.of(item.getId(), 5)), // 재고 초과
                     memberCoupon.getId()
             );
