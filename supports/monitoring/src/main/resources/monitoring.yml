@@ -18,6 +18,7 @@ management:
       hikaricp: true
       logback: true
       process: true
+      resilience4j: true
   endpoints:
     web:
       exposure:

@@ -14,6 +14,7 @@ dependencies {
 
     // resilience4j (Spring Boot 3.x 호환 버전)
     implementation("io.github.resilience4j:resilience4j-spring-boot3:2.2.0")
+    implementation("io.github.resilience4j:resilience4j-micrometer:2.2.0")
     implementation("org.springframework.boot:spring-boot-starter-aop")
 
     // querydsl

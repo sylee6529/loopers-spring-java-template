@@ -101,12 +101,23 @@ public class Payment extends BaseEntity {
         this.lastCheckedAt = LocalDateTime.now();
     }
 
+    public void markAsCancelled(String reason) {
+        if (this.status == PaymentStatus.SUCCESS) {
+            throw new IllegalStateException("이미 성공한 결제는 취소할 수 없습니다.");
+        }
+        this.status = PaymentStatus.CANCELLED;
+        this.reason = reason;
+        this.requiresRetry = false;
+        this.lastCheckedAt = LocalDateTime.now();
+    }
+
     public void updateFromPg(PaymentStatus pgStatus, String reason) {
         this.lastCheckedAt = LocalDateTime.now();
 
         switch (pgStatus) {
             case SUCCESS -> markAsSuccess();
             case FAILED -> markAsFailed(reason);
+            case CANCELLED -> markAsCancelled(reason);
             case PENDING -> this.status = PaymentStatus.PENDING;
         }
     }

@@ -61,12 +61,29 @@ public class PaymentController {
         return ResponseEntity.ok(PaymentResponse.from(paymentInfo));
     }
 
+    @PostMapping("/orders/{orderNo}/cancel")
+    public ResponseEntity<PaymentResponse> cancelPayment(
+            @RequestHeader("X-USER-ID") String userId,
+            @PathVariable String orderNo,
+            @RequestBody CancelRequest request
+    ) {
+        log.info("[Payment API] 결제 취소 - userId: {}, orderNo: {}", userId, orderNo);
+
+        PaymentInfo paymentInfo = paymentFacade.cancelPayment(userId, orderNo, request.reason());
+
+        return ResponseEntity.ok(PaymentResponse.from(paymentInfo));
+    }
+
     public record PaymentRequest(
             String orderId,
             CardType cardType,
             String cardNo,
             Long amount,
             String callbackUrl
+    ) {}
+
+    public record CancelRequest(
+            String reason
     ) {}
 
     public record PaymentResponse(

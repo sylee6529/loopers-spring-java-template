@@ -2,9 +2,12 @@ package com.loopers.application.payment;
 
 import com.loopers.domain.order.Order;
 import com.loopers.domain.order.repository.OrderRepository;
+import com.loopers.domain.product.repository.ProductRepository;
+import com.loopers.domain.payment.Payment;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -17,8 +20,9 @@ public class PaymentFacade {
 
     private final PaymentService paymentService;
     private final OrderRepository orderRepository;
+    private final ProductRepository productRepository;
 
-    @Transactional
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public PaymentInfo requestPayment(String userId, PaymentCommand.RequestPayment command) {
         return paymentService.requestPayment(userId, command);
     }
@@ -61,6 +65,31 @@ public class PaymentFacade {
         }
 
         return paymentInfo;
+    }
+
+    @Transactional
+    public PaymentInfo cancelPayment(String userId, String orderNo, String reason) {
+        Payment payment = paymentService.findByOrderNo(orderNo);
+
+        if (payment.getStatus() == com.loopers.domain.payment.PaymentStatus.SUCCESS) {
+            throw new com.loopers.support.error.CoreException(
+                    com.loopers.support.error.ErrorType.BAD_REQUEST,
+                    "이미 성공한 결제는 취소할 수 없습니다.");
+        }
+
+        paymentService.cancelPayment(payment.getId(), reason);
+
+        Order order = payment.getOrder();
+        if (!order.isPaid()) {
+            order.cancel();
+            orderRepository.save(order);
+
+            order.getItems().forEach(item ->
+                    productRepository.increaseStock(item.getProductId(), item.getQuantity()));
+        }
+
+        log.info("[PaymentFacade] 결제 취소 완료 - orderNo: {}, reason: {}", orderNo, reason);
+        return PaymentInfo.from(paymentService.findById(payment.getId()));
     }
 
     @Transactional(readOnly = true)

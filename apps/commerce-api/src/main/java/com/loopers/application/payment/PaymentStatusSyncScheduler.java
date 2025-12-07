@@ -36,7 +36,15 @@ public class PaymentStatusSyncScheduler {
             for (PaymentInfo paymentInfo : pendingPayments) {
                 try {
                     if (paymentInfo.transactionKey() == null || paymentInfo.transactionKey().isEmpty()) {
-                        log.warn("[PaymentSync] transactionKey 없음, 스킵 - orderNo: {}", paymentInfo.orderNo());
+                        if (paymentInfo.requiresRetry()) {
+                            log.warn("[PaymentSync] transactionKey 없음 + 재시도 필요, 취소 처리 - orderNo: {}", paymentInfo.orderNo());
+                            paymentFacade.cancelPayment(
+                                    "SCHEDULER",
+                                    paymentInfo.orderNo(),
+                                    "PG 요청 실패로 자동 취소");
+                        } else {
+                            log.warn("[PaymentSync] transactionKey 없음, 스킵 - orderNo: {}", paymentInfo.orderNo());
+                        }
                         continue;
                     }
 
@@ -80,8 +88,19 @@ public class PaymentStatusSyncScheduler {
             log.info("[PaymentRetry] 재시도 필요 결제 {}건 발견", retryPayments.size());
 
             for (PaymentInfo paymentInfo : retryPayments) {
-                log.warn("[PaymentRetry] 수동 처리 필요 - orderNo: {}, 관리자 확인 필요", paymentInfo.orderNo());
-                // TODO: 관리자 알림, 수동 재시도 API 제공 등
+                try {
+                    if (paymentInfo.createdAt().isBefore(java.time.ZonedDateTime.now().minusMinutes(15))) {
+                        log.warn("[PaymentRetry] 재시도 한도 초과, 자동 취소 - orderNo: {}", paymentInfo.orderNo());
+                        paymentFacade.cancelPayment(
+                                "SCHEDULER",
+                                paymentInfo.orderNo(),
+                                "PG 재요청 실패 - 타임아웃 초과");
+                    } else {
+                        log.warn("[PaymentRetry] 수동 처리 필요 - orderNo: {}, 관리자 확인 필요", paymentInfo.orderNo());
+                    }
+                } catch (Exception e) {
+                    log.error("[PaymentRetry] 재시도 결제 처리 오류 - orderNo: {}", paymentInfo.orderNo(), e);
+                }
             }
 
         } catch (Exception e) {

@@ -14,5 +14,10 @@ public enum PaymentStatus {
     /**
      * 결제 실패 (한도초과, 잘못된 카드 등)
      */
-    FAILED
+    FAILED,
+
+    /**
+     * 결제 취소 (사용자/시스템에 의해 중단)
+     */
+    CANCELLED
 }

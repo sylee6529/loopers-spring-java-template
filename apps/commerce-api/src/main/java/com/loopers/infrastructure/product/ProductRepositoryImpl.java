@@ -125,6 +125,15 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
     @Override
+    public int increaseStock(Long productId, int quantity) {
+        return Math.toIntExact(queryFactory
+                .update(product)
+                .set(product.stock.quantity, product.stock.quantity.add(quantity))
+                .where(product.id.eq(productId))
+                .execute());
+    }
+
+    @Override
     public int incrementLikeCount(Long productId) {
         return Math.toIntExact(queryFactory
                 .update(product)

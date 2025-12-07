@@ -23,7 +23,7 @@ resilience4j:
         baseConfig: default
         slidingWindowSize: 20
         minimumNumberOfCalls: 3
-        failureRateThreshold: 60
+        failureRateThreshold: 30
         slowCallDurationThreshold: 1s
         waitDurationInOpenState: 15s
 
@@ -43,8 +43,8 @@ resilience4j:
     instances:
       pgSimulator:
         baseConfig: default
-        maxAttempts: 1
-        waitDuration: 300ms
+        maxAttempts: 3
+        waitDuration: 500ms
 
   timelimiter:
     configs:
