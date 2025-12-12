@@ -41,6 +41,9 @@ public class Payment extends BaseEntity {
     @Column(nullable = false)
     private Long amount;
 
+    @Column(nullable = false)
+    private Long pointUsed;
+
     @Column(length = 500)
     private String reason;
 
@@ -57,6 +60,7 @@ public class Payment extends BaseEntity {
             CardType cardType,
             String cardNo,
             Long amount,
+            Long pointUsed,
             String callbackUrl
     ) {
         Payment payment = new Payment();
@@ -64,6 +68,7 @@ public class Payment extends BaseEntity {
         payment.cardType = cardType;
         payment.cardNo = maskCardNo(cardNo);
         payment.amount = amount;
+        payment.pointUsed = pointUsed;
         payment.callbackUrl = callbackUrl;
         payment.status = PaymentStatus.PENDING;
         payment.requiresRetry = false;
@@ -136,6 +141,13 @@ public class Payment extends BaseEntity {
 
     public boolean hasTransactionKey() {
         return transactionKey != null && !transactionKey.isEmpty();
+    }
+
+    public void refundPoints(java.util.function.LongConsumer refundAction) {
+        if (pointUsed != null && pointUsed > 0) {
+            refundAction.accept(pointUsed);
+            this.pointUsed = 0L;
+        }
     }
 
     public boolean isOlderThan(LocalDateTime dateTime) {
