@@ -22,6 +22,8 @@ public interface ProductRepository {
 
     int decreaseStock(Long productId, int quantity);
 
+    int increaseStock(Long productId, int quantity);
+
     int incrementLikeCount(Long productId);
 
     int decrementLikeCount(Long productId);

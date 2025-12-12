@@ -44,7 +44,6 @@ class OrderPlacementServiceTest {
                 orderRepository,
                 productRepository,
                 memberRepository,
-                pointRepository,
                 memberCouponRepository
         );
     }
@@ -57,8 +56,7 @@ class OrderPlacementServiceTest {
         @Test
         void shouldProcessOrder_whenValidOrderPlaced() {
         // given
-        String memberId = "member1";
-        setupMemberWithPoints(memberId, BigDecimal.valueOf(50000));
+        Long memberId = setupMemberWithPoints("member1", BigDecimal.valueOf(50000));
         
         Product product1 = setupProduct(1L, Money.of(10000), Stock.of(100));
         Product product2 = setupProduct(2L, Money.of(15000), Stock.of(50));
@@ -93,8 +91,7 @@ class OrderPlacementServiceTest {
         @Test
         void shouldThrowException_whenInsufficientStock() {
         // given
-        String memberId = "member1";
-        setupMemberWithPoints(memberId, BigDecimal.valueOf(50000));
+        Long memberId = setupMemberWithPoints("member1", BigDecimal.valueOf(50000));
         
         Product product = setupProduct(1L, Money.of(10000), Stock.of(5));
 
@@ -116,8 +113,7 @@ class OrderPlacementServiceTest {
         @Test
         void shouldThrowException_whenInsufficientPoints() {
         // given
-        String memberId = "member1";
-        setupMemberWithPoints(memberId, BigDecimal.valueOf(5000)); // 부족한 포인트
+        Long memberId = setupMemberWithPoints("member1", BigDecimal.valueOf(5000)); // 부족한 포인트
         
         setupProduct(1L, Money.of(10000), Stock.of(100));
 
@@ -136,7 +132,7 @@ class OrderPlacementServiceTest {
         @Test
         void shouldThrowException_whenMemberNotFound() {
         // given
-        String nonExistentMemberId = "none123";
+        Long nonExistentMemberId = 999L; // ID that doesn't exist
         setupProduct(1L, Money.of(10000), Stock.of(100));
 
         OrderPlacementCommand command = OrderPlacementCommand.of(
@@ -154,8 +150,7 @@ class OrderPlacementServiceTest {
         @Test
         void shouldThrowException_whenProductNotFound() {
         // given
-        String memberId = "member1";
-        setupMemberWithPoints(memberId, BigDecimal.valueOf(50000));
+        Long memberId = setupMemberWithPoints("member1", BigDecimal.valueOf(50000));
 
         OrderPlacementCommand command = OrderPlacementCommand.of(
                 memberId,
@@ -172,8 +167,7 @@ class OrderPlacementServiceTest {
         @Test
         void shouldThrowException_whenMemberPointsNotFound() {
         // given
-        String memberId = "member1";
-        setupMember(memberId); // 포인트는 설정하지 않음
+        Long memberId = setupMember("member1"); // 포인트는 설정하지 않음
         setupProduct(1L, Money.of(10000), Stock.of(100));
 
         OrderPlacementCommand command = OrderPlacementCommand.of(
@@ -196,8 +190,7 @@ class OrderPlacementServiceTest {
         @Test
         void shouldCalculateTotalCorrectly_whenOrderingMultipleProducts() {
         // given
-        String memberId = "member1";
-        setupMemberWithPoints(memberId, BigDecimal.valueOf(100000));
+        Long memberId = setupMemberWithPoints("member1", BigDecimal.valueOf(100000));
         
         setupProduct(1L, Money.of(10000), Stock.of(100));
         setupProduct(2L, Money.of(25000), Stock.of(50));
@@ -226,20 +219,30 @@ class OrderPlacementServiceTest {
         }
     }
 
-    private void setupMemberWithPoints(String memberId, BigDecimal points) {
-        setupMember(memberId);
-        pointRepository.save(Point.create(memberId, points));
-    }
-
-    private void setupMember(String memberId) {
+    private Long setupMemberWithPoints(String username, BigDecimal points) {
         Member member = new Member(
-                memberId,
-                memberId + "@test.com",
+                username,
+                username + "@test.com",
                 "password123",
                 "1990-01-01",
                 Gender.MALE
         );
-        memberRepository.save(member);
+        Member saved = memberRepository.save(member);
+        Long memberId = saved.getId();
+        pointRepository.save(Point.create(memberId, points));
+        return memberId;
+    }
+
+    private Long setupMember(String username) {
+        Member member = new Member(
+                username,
+                username + "@test.com",
+                "password123",
+                "1990-01-01",
+                Gender.MALE
+        );
+        Member saved = memberRepository.save(member);
+        return saved.getId();
     }
 
     private Product setupProduct(Long productId, Money price, Stock stock) {

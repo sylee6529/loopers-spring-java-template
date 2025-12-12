@@ -18,6 +18,13 @@ public class InMemoryOrderRepository implements OrderRepository {
     }
 
     @Override
+    public Optional<Order> findByOrderNo(String orderNo) {
+        return store.values().stream()
+                .filter(order -> orderNo.equals(order.getOrderNo()))
+                .findFirst();
+    }
+
+    @Override
     public Order save(Order order) {
         if (order.getId() == null) {
             Long newId = ++sequence;

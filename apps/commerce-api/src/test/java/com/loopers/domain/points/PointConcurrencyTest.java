@@ -60,8 +60,11 @@ class PointConcurrencyTest {
     @DisplayName("동일한 유저가 서로 다른 주문을 동시에 수행해도, 포인트가 정상적으로 차감되어야 한다")
     void shouldDeductPointsCorrectly_whenSameUserPlacesConcurrentOrders() throws InterruptedException {
         // given
-        String memberId = "member1";
-        memberFacade.registerMember(memberId, memberId + "@test.com", "password", "1990-01-01", Gender.MALE);
+        String username = "member1";
+        memberFacade.registerMember(username, username + "@test.com", "password", "1990-01-01", Gender.MALE);
+
+        // Member ID is 1L (first member created after table truncation)
+        Long memberId = 1L;
 
         BigDecimal initialPoints = BigDecimal.valueOf(10000);
         // MemberFacade가 이미 Point를 0원으로 생성했으므로 업데이트
@@ -141,8 +144,11 @@ class PointConcurrencyTest {
     @DisplayName("포인트가 부족한 상황에서 동일 유저가 동시 주문 시, 일부만 성공하고 포인트는 음수가 되지 않아야 한다")
     void shouldRejectOrder_whenPointsInsufficientDuringConcurrentOrders() throws InterruptedException {
         // given
-        String memberId = "member1";
-        memberFacade.registerMember(memberId, memberId + "@test.com", "password", "1990-01-01", Gender.MALE);
+        String username = "member1";
+        memberFacade.registerMember(username, username + "@test.com", "password", "1990-01-01", Gender.MALE);
+
+        // Member ID is 1L (first member created after table truncation)
+        Long memberId = 1L;
 
         BigDecimal initialPoints = BigDecimal.valueOf(5000);
         // MemberFacade가 이미 Point를 0원으로 생성했으므로 업데이트
@@ -236,9 +242,14 @@ class PointConcurrencyTest {
         int userCount = 5;
 
         // 5명의 회원 생성 및 각각 3000원 포인트 부여
+        Long[] memberIds = new Long[userCount];
         for (int i = 0; i < userCount; i++) {
-            String memberId = "member" + i;
-            memberFacade.registerMember(memberId, memberId + "@test.com", "password", "1990-01-01", Gender.MALE);
+            String username = "member" + i;
+            memberFacade.registerMember(username, username + "@test.com", "password", "1990-01-01", Gender.MALE);
+            // Member IDs are assigned sequentially starting from 1L
+            Long memberId = (long) (i + 1);
+            memberIds[i] = memberId;
+
             Point existingPoint = pointRepository.findByMemberId(memberId).orElseThrow();
             existingPoint.addAmount(BigDecimal.valueOf(3000));
             pointRepository.save(existingPoint);
@@ -249,7 +260,7 @@ class PointConcurrencyTest {
         // when: 5명이 동시에 1000원 상품 주문
         try (ExecutorService executorService = Executors.newFixedThreadPool(userCount)) {
             for (int i = 0; i < userCount; i++) {
-                final String memberId = "member" + i;
+                final Long memberId = memberIds[i];
                 executorService.submit(() -> {
                     try {
                         OrderCommand command = OrderCommand.of(
@@ -268,7 +279,7 @@ class PointConcurrencyTest {
 
         // then: 모든 유저가 2000원씩 남아있어야 함
         for (int i = 0; i < userCount; i++) {
-            String memberId = "member" + i;
+            Long memberId = memberIds[i];
             Point point = pointRepository.findByMemberId(memberId).orElseThrow();
             assertThat(point.getAmount()).isEqualByComparingTo(BigDecimal.valueOf(2000)); // 3000 - 1000
         }

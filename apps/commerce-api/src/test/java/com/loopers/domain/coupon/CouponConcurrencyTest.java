@@ -68,8 +68,11 @@ class CouponConcurrencyTest {
     @DisplayName("동일한 쿠폰으로 여러 기기에서 동시에 주문해도, 쿠폰은 단 한번만 사용되어야 한다")
     void shouldUseCouponOnlyOnce_whenConcurrentOrdersWithSameCoupon() throws InterruptedException {
         // given
-        String memberId = "testUser";
-        memberFacade.registerMember(memberId, memberId + "@test.com", "password", "1990-01-01", Gender.MALE);
+        String username = "testUser";
+        memberFacade.registerMember(username, username + "@test.com", "password", "1990-01-01", Gender.MALE);
+
+        // Member ID is 1L (first member created after table truncation)
+        Long memberId = 1L;
 
         Point existingPoint = pointRepository.findByMemberId(memberId).orElseThrow();
         existingPoint.addAmount(BigDecimal.valueOf(100000));
@@ -144,9 +147,14 @@ class CouponConcurrencyTest {
         Long[] couponIds = new Long[threadCount];
 
         // 10명의 회원 생성 및 각각 쿠폰 발급
+        Long[] memberIds = new Long[threadCount];
         for (int i = 0; i < threadCount; i++) {
-            String memberId = "member" + i;
-            memberFacade.registerMember(memberId, memberId + "@test.com", "password", "1990-01-01", Gender.MALE);
+            String username = "member" + i;
+            memberFacade.registerMember(username, username + "@test.com", "password", "1990-01-01", Gender.MALE);
+
+            // Member IDs are assigned sequentially starting from 1L
+            Long memberId = (long) (i + 1);
+            memberIds[i] = memberId;
 
             Point existingPoint = pointRepository.findByMemberId(memberId).orElseThrow();
             existingPoint.addAmount(BigDecimal.valueOf(50000));
@@ -163,7 +171,7 @@ class CouponConcurrencyTest {
         // when: 10명이 각자의 쿠폰으로 동시에 주문
         try (ExecutorService executorService = Executors.newFixedThreadPool(threadCount)) {
             for (int i = 0; i < threadCount; i++) {
-                final String memberId = "member" + i;
+                final Long memberId = memberIds[i];
                 final Long couponId = couponIds[i];
                 executorService.submit(() -> {
                     try {
@@ -200,8 +208,11 @@ class CouponConcurrencyTest {
     @DisplayName("동일한 유저가 여러 주문을 동시에 쿠폰과 함께 수행해도, 쿠폰별로 정상 처리되어야 한다")
     void shouldHandleConcurrentOrdersWithMultipleCoupons_forSameUser() throws InterruptedException {
         // given
-        String memberId = "testUser";
-        memberFacade.registerMember(memberId, memberId + "@test.com", "password", "1990-01-01", Gender.MALE);
+        String username = "testUser";
+        memberFacade.registerMember(username, username + "@test.com", "password", "1990-01-01", Gender.MALE);
+
+        // Member ID is 1L (first member created after table truncation)
+        Long memberId = 1L;
 
         Point existingPoint = pointRepository.findByMemberId(memberId).orElseThrow();
         existingPoint.addAmount(BigDecimal.valueOf(100000));

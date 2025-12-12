@@ -23,11 +23,17 @@ spring:
       - redis.yml
       - logging.yml
       - monitoring.yml
+      - resilience4j.yml
 
 springdoc:
   use-fqn: true
   swagger-ui:
     path: /swagger-ui.html
+
+# PG Simulator 설정
+payment:
+  pg:
+    base-url: http://localhost:8082
 
 ---
 spring:

@@ -33,7 +33,7 @@ class PointServiceIntegrationTest {
         @DisplayName("해당 ID의 회원이 존재할 경우, 보유 포인트가 반환된다")
         @Test
         void shouldReturnPoints_whenMemberExists() {
-            String memberId = "test123";
+            Long memberId = 123L;
             pointService.initializeMemberPoints(memberId);
 
             BigDecimal result = pointService.getMemberPoints(memberId);
@@ -45,7 +45,7 @@ class PointServiceIntegrationTest {
         @DisplayName("해당 ID의 회원이 존재하지 않을 경우, null이 반환된다")
         @Test
         void shouldReturnNull_whenMemberDoesNotExist() {
-            BigDecimal result = pointService.getMemberPoints("nonexistent");
+            BigDecimal result = pointService.getMemberPoints(999L);
 
             assertThat(result).isNull();
         }
