@@ -51,10 +51,8 @@ public class OrderPlacementService {
             finalPrice = Money.zero();
         }
 
-        if (memberCoupon != null) {
-            memberCoupon.use();
-            memberCouponRepository.save(memberCoupon);
-        }
+        // 쿠폰은 검증만 하고 사용은 하지 않음 (이벤트 리스너에서 처리)
+        // memberCoupon.use()는 CouponEventListener에서 수행됨
 
         Order order = Order.create(command.getMemberId(), items, finalPrice);
         return orderRepository.save(order);

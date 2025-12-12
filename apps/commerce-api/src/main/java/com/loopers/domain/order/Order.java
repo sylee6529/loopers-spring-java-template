@@ -89,7 +89,7 @@ public class Order extends BaseEntity {
     }
 
     private static void validateMemberId(Long memberId) {
-        if (memberId == null) {
+        if (memberId == null || memberId <= 0) {
             throw new CoreException(ErrorType.BAD_REQUEST, "회원 ID는 필수입니다.");
         }
     }
