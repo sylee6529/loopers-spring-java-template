@@ -1,6 +1,7 @@
 package com.loopers.application.event.listener;
 
 import com.loopers.application.event.payment.PaymentCompletedEvent;
+import com.loopers.application.event.order.OrderCompletedEvent;
 import com.loopers.domain.order.Order;
 import com.loopers.domain.order.repository.OrderRepository;
 import com.loopers.support.error.CoreException;
@@ -43,8 +44,12 @@ public class OrderStatusEventListener {
             orderRepository.save(order);
             log.info("[OrderStatusEventListener] 주문 완료 처리 - orderNo: {}", event.orderNo());
 
-            // TODO: OrderCompletedEvent 발행 (데이터 플랫폼 전송용)
-            // eventPublisher.publishEvent(new OrderCompletedEvent(...));
+            eventPublisher.publishEvent(new OrderCompletedEvent(
+                order.getOrderNo(),
+                order.getMemberId(),
+                order.getTotalPrice(),
+                java.time.LocalDateTime.now()
+            ));
 
         } else if (event.isFailed()) {
             log.warn("[OrderStatusEventListener] 결제 실패 - orderNo: {}, reason: {}",
