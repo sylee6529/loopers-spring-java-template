@@ -2,6 +2,7 @@ package com.loopers.application.like;
 
 import com.loopers.application.event.like.ProductLikedEvent;
 import com.loopers.application.event.like.ProductUnlikedEvent;
+import com.loopers.application.event.tracking.UserActionEvent;
 import com.loopers.domain.like.service.LikeService;
 import com.loopers.domain.product.Product;
 import com.loopers.domain.product.repository.ProductRepository;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -35,6 +37,14 @@ public class LikeFacade {
             LocalDateTime.now()
         ));
 
+        eventPublisher.publishEvent(UserActionEvent.of(
+            "PRODUCT_LIKE",
+            memberId,
+            "PRODUCT",
+            String.valueOf(productId),
+            Map.of("brandId", product.getBrandId())
+        ));
+
         log.info("[LikeFacade] 좋아요 이벤트 발행 - memberId: {}, productId: {}", memberId, productId);
     }
 
@@ -48,6 +58,14 @@ public class LikeFacade {
             productId,
             product.getBrandId(),
             LocalDateTime.now()
+        ));
+
+        eventPublisher.publishEvent(UserActionEvent.of(
+            "PRODUCT_UNLIKE",
+            memberId,
+            "PRODUCT",
+            String.valueOf(productId),
+            Map.of("brandId", product.getBrandId())
         ));
 
         log.info("[LikeFacade] 좋아요 취소 이벤트 발행 - memberId: {}, productId: {}", memberId, productId);

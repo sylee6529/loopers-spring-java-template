@@ -160,6 +160,14 @@ public class PaymentService {
             refundPoints(payment);
         }
 
+        eventPublisher.publishEvent(new PaymentCompletedEvent(
+            payment.getOrder().getOrderNo(),
+            payment.getId(),
+            pgStatus,
+            command.reason(),
+            LocalDateTime.now()
+        ));
+
         log.info("[Payment] 콜백 처리 완료 - orderNo: {}, status: {}",
                 payment.getOrder().getOrderNo(), payment.getStatus());
 
@@ -234,6 +242,25 @@ public class PaymentService {
         } else {
             payment.markAsRequiresRetry();
             log.warn("[Payment] PG 장애로 재시도 필요 - orderNo: {}", payment.getOrder().getOrderNo());
+        }
+
+        if (pgResult.status() == PgGateway.PgPaymentStatus.SUCCESS) {
+            eventPublisher.publishEvent(new PaymentCompletedEvent(
+                payment.getOrder().getOrderNo(),
+                payment.getId(),
+                PaymentStatus.SUCCESS,
+                null,
+                LocalDateTime.now()
+            ));
+        } else if (pgResult.status() == PgGateway.PgPaymentStatus.FAILED) {
+            refundPoints(payment);
+            eventPublisher.publishEvent(new PaymentCompletedEvent(
+                payment.getOrder().getOrderNo(),
+                payment.getId(),
+                PaymentStatus.FAILED,
+                pgResult.reason(),
+                LocalDateTime.now()
+            ));
         }
         return payment;
     }
