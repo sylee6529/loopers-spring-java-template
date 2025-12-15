@@ -158,12 +158,12 @@ class OrderV1ApiE2ETest {
             );
         }
 
-        @DisplayName("포인트 부족 시 400 Bad Request를 반환한다")
+        @DisplayName("포인트 없어도 주문 생성은 성공한다 (결제는 별도 단계)")
         @Test
-        void shouldReturn400_whenInsufficientPoints() {
+        void shouldSucceedOrder_evenWithoutPoints() {
             // 포인트 없는 회원과 상품 설정
             Long memberId = memberFacade.registerMember("pooruser", "poor@example.com", "password", "1990-01-01", Gender.MALE).id();
-            
+
             Brand brand = brandRepository.save(new Brand("TestBrand", "Test Brand Description"));
             Product product = new Product(
                     brand.getId(),
@@ -187,9 +187,12 @@ class OrderV1ApiE2ETest {
                     testRestTemplate.exchange("/api/v1/orders", HttpMethod.POST,
                             new HttpEntity<>(request, headers), responseType);
 
+            // 주문 생성은 성공 (포인트 체크는 결제 단계에서 수행)
             assertAll(
-                    () -> assertTrue(response.getStatusCode().is4xxClientError()),
-                    () -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST)
+                    () -> assertTrue(response.getStatusCode().is2xxSuccessful()),
+                    () -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK),
+                    () -> assertThat(response.getBody()).isNotNull(),
+                    () -> assertThat(response.getBody().data()).isNotNull()
             );
         }
     }

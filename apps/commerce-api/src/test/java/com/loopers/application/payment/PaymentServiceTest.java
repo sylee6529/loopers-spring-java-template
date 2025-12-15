@@ -117,6 +117,15 @@ class PaymentServiceTest {
             "http://callback.url"
         );
 
+        // PG 성공 응답 모킹
+        PgGateway.PgPaymentResult pgResult = new PgGateway.PgPaymentResult(
+            "TXN-KEY-123",
+            PgGateway.PgTransactionStatus.SUCCESS,
+            "결제 성공"
+        );
+        when(pgGateway.requestPayment(anyString(), any()))
+            .thenReturn(java.util.concurrent.CompletableFuture.completedFuture(pgResult));
+
         // when
         paymentService.requestPayment("user1", command);
 

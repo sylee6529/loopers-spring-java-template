@@ -176,8 +176,12 @@ class CouponEventListenerTest {
         // given
         Long memberId = testOrder.getMemberId();
 
-        // 회원 포인트 생성 (초기: 10000원)
+        // 재고 차감 (주문 생성 시 차감된 상태 시뮬레이션)
+        productRepository.decreaseStock(testProduct.getId(), 1);
+
+        // 회원 포인트 생성 및 차감 (초기: 10000원 -> 3000원 사용 후 7000원)
         Point memberPoint = Point.create(memberId, BigDecimal.valueOf(10000));
+        memberPoint.pay(BigDecimal.valueOf(3000));  // 결제 시 포인트 차감 시뮬레이션
         pointRepository.save(memberPoint);
 
         // 결제 생성 (포인트 3000원 사용)

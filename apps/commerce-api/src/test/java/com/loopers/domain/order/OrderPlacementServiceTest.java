@@ -212,9 +212,9 @@ class OrderPlacementServiceTest {
             // then
             assertThat(result.getTotalPrice()).isEqualTo(Money.of(9000));  // 10000 - 1000
 
-            // 쿠폰은 검증만 하고 사용하지 않음 (이벤트에서 처리)
+            // 쿠폰은 주문 생성 시 사용됨 (동시성 보장을 위해)
             MemberCoupon savedCoupon = memberCouponRepository.findById(memberCoupon.getId()).orElseThrow();
-            assertThat(savedCoupon.isUsable()).isTrue();  // 아직 사용 가능 상태
+            assertThat(savedCoupon.isUsed()).isTrue();  // 사용됨 상태
         }
 
         @DisplayName("다른 회원의 쿠폰 사용 시 예외가 발생한다")
@@ -239,7 +239,7 @@ class OrderPlacementServiceTest {
             // when & then
             assertThatThrownBy(() -> orderPlacementService.placeOrder(command))
                     .isInstanceOf(CoreException.class)
-                    .hasMessageContaining("소유한 쿠폰이 아닙니다");
+                    .hasMessageContaining("본인의 쿠폰만 사용할 수 있습니다");
         }
 
         @DisplayName("이미 사용된 쿠폰 사용 시 예외가 발생한다")

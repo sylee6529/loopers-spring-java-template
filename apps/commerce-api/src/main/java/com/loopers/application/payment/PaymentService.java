@@ -244,7 +244,7 @@ public class PaymentService {
             log.warn("[Payment] PG 장애로 재시도 필요 - orderNo: {}", payment.getOrder().getOrderNo());
         }
 
-        if (pgResult.status() == PgGateway.PgPaymentStatus.SUCCESS) {
+        if (pgResult.status() == PgGateway.PgTransactionStatus.SUCCESS) {
             eventPublisher.publishEvent(new PaymentCompletedEvent(
                 payment.getOrder().getOrderNo(),
                 payment.getId(),
@@ -252,13 +252,13 @@ public class PaymentService {
                 null,
                 LocalDateTime.now()
             ));
-        } else if (pgResult.status() == PgGateway.PgPaymentStatus.FAILED) {
+        } else if (pgResult.status() == PgGateway.PgTransactionStatus.FAILED) {
             refundPoints(payment);
             eventPublisher.publishEvent(new PaymentCompletedEvent(
                 payment.getOrder().getOrderNo(),
                 payment.getId(),
                 PaymentStatus.FAILED,
-                pgResult.reason(),
+                pgResult.message(),
                 LocalDateTime.now()
             ));
         }

@@ -180,8 +180,8 @@ public class OrderServiceIntegrationTest {
 
         @Test
         @Transactional
-        @DisplayName("유저 포인트 정보 없으면 실패")
-        void noUserPoint_fail() {
+        @DisplayName("유저 포인트 정보 없어도 주문 생성은 성공 (결제는 별도 단계)")
+        void noUserPoint_orderCreationSucceeds() {
             Member member = memberRepository.save(createMember("user1"));
             Long memberId = member.getId();
             Product item = productRepository.save(createProduct(1L, "상품", 1000L, 10));
@@ -191,8 +191,11 @@ public class OrderServiceIntegrationTest {
                     List.of(OrderLineCommand.of(item.getId(), 1))
             );
 
-            assertThatThrownBy(() -> orderFacade.placeOrder(command))
-                    .isInstanceOf(RuntimeException.class);
+            // 주문 생성은 성공해야 함 (포인트 체크는 결제 단계에서)
+            OrderInfo result = orderFacade.placeOrder(command);
+
+            assertThat(result).isNotNull();
+            assertThat(result.getOrderNo()).isNotNull();
         }
     }
 
