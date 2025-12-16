@@ -26,6 +26,7 @@ class OrderStatusEventListenerTest {
 
     private OrderStatusEventListener orderStatusEventListener;
     private InMemoryOrderRepository orderRepository;
+    private InMemoryProductRepository productRepository;
     private ApplicationEventPublisher eventPublisher;
 
     private Order testOrder;
@@ -34,15 +35,18 @@ class OrderStatusEventListenerTest {
     @BeforeEach
     void setUp() {
         orderRepository = new InMemoryOrderRepository();
+        productRepository = new InMemoryProductRepository();
         eventPublisher = mock(ApplicationEventPublisher.class);
 
         orderStatusEventListener = new OrderStatusEventListener(
             orderRepository,
+            productRepository,
             eventPublisher
         );
 
         // 테스트 상품 생성
         testProduct = new Product(1L, "테스트상품", null, Money.of(10000), Stock.of(100));
+        productRepository.save(testProduct);
 
         // 테스트 주문 생성 (결제 대기 상태)
         OrderItem orderItem = new OrderItem(testProduct.getId(), 1, testProduct.getPrice());
@@ -74,9 +78,11 @@ class OrderStatusEventListenerTest {
     }
 
     @Test
-    @DisplayName("결제 실패 시 주문 상태는 변경되지 않는다")
-    void 결제_실패_시_주문_상태_유지() {
+    @DisplayName("결제 실패 시 주문이 취소되고 재고가 복구된다")
+    void 결제_실패_시_주문_취소_및_재고_복구() {
         // given
+        int originalStock = testProduct.getStock().getQuantity();
+
         PaymentCompletedEvent event = new PaymentCompletedEvent(
             testOrder.getOrderNo(),
             1L,
@@ -85,14 +91,17 @@ class OrderStatusEventListenerTest {
             LocalDateTime.now()
         );
 
-        OrderStatus originalStatus = testOrder.getStatus();
-
         // when
         orderStatusEventListener.handlePaymentCompleted(event);
 
         // then
         Order order = orderRepository.findByOrderNo(testOrder.getOrderNo()).orElseThrow();
-        assertThat(order.getStatus()).isEqualTo(originalStatus);
+        assertThat(order.getStatus()).isEqualTo(OrderStatus.CANCELLED);
+        assertThat(order.isCancelled()).isTrue();
+
+        // 재고가 복구되어야 함
+        Product product = productRepository.findById(testProduct.getId()).orElseThrow();
+        assertThat(product.getStock().getQuantity()).isEqualTo(originalStock + 1);
     }
 
     @Test

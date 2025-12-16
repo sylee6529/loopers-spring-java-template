@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @DisplayName("좋아요 집계 이벤트 리스너 테스트")
@@ -75,7 +76,7 @@ class LikeAggregationEventListenerTest {
     }
 
     @Test
-    @DisplayName("Redis 업데이트 실패 시 예외가 발생하지 않는다")
+    @DisplayName("Redis 업데이트 실패 시 재시도 후 예외가 발생한다")
     void Redis_업데이트_실패_시_예외_처리() {
         // given
         ProductLikedEvent event = new ProductLikedEvent(
@@ -86,12 +87,17 @@ class LikeAggregationEventListenerTest {
         doThrow(new RuntimeException("Redis connection failed"))
             .when(productLikeCountCache).increment(anyLong());
 
-        // when & then - 예외가 전파되지 않아야 함 (로그만 남김)
-        // 실제로는 listener 내부에서 try-catch로 처리하므로 예외가 발생하지 않음
-        listener.handleProductLiked(event);
+        // when & then - @Retryable로 인해 재시도 후 예외 발생
+        try {
+            listener.handleProductLiked(event);
+            // 예외가 발생해야 함
+            assert false : "Exception should be thrown after retries";
+        } catch (RuntimeException e) {
+            // 예외가 발생하는 것이 정상
+            assertThat(e.getMessage()).contains("Redis connection failed");
+        }
 
-        // Redis 실패해도 나머지 캐시는 업데이트 시도
-        verify(memberLikesCache, times(1)).add(1L, 100L);
-        verify(cacheInvalidationService, times(1)).invalidateOnLikeChange(100L, 10L);
+        // increment에서 예외 발생하므로 나머지는 실행되지 않음
+        verify(productLikeCountCache, atLeastOnce()).increment(100L);
     }
 }
