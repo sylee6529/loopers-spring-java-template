@@ -53,10 +53,10 @@ class AsyncConfigTest {
 
         // then
         assertThat(executor).isNotNull();
-        assertThat(executor.getCorePoolSize()).isEqualTo(5);
-        assertThat(executor.getMaxPoolSize()).isEqualTo(10);
-        assertThat(executor.getQueueCapacity()).isEqualTo(100);
-        assertThat(executor.getThreadNamePrefix()).isEqualTo("async-");
+        assertThat(executor.getCorePoolSize()).isEqualTo(10);
+        assertThat(executor.getMaxPoolSize()).isEqualTo(20);
+        assertThat(executor.getQueueCapacity()).isEqualTo(200);
+        assertThat(executor.getThreadNamePrefix()).isEqualTo("async-event-");
     }
 
     @Component
