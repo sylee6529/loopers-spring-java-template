@@ -130,4 +130,8 @@ public class Order extends BaseEntity {
     public boolean isPaid() {
         return this.status == OrderStatus.PAID;
     }
+
+    public boolean isCancelled() {
+        return this.status == OrderStatus.CANCELLED;
+    }
 }

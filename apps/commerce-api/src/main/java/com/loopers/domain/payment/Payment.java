@@ -6,9 +6,11 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 
+@Slf4j
 @Entity
 @Table(name = "payments",
     indexes = {
@@ -43,6 +45,9 @@ public class Payment extends BaseEntity {
 
     @Column(nullable = false)
     private Long pointUsed;
+
+    @Column(nullable = false)
+    private boolean pointRefunded = false;
 
     @Column(length = 500)
     private String reason;
@@ -143,10 +148,17 @@ public class Payment extends BaseEntity {
         return transactionKey != null && !transactionKey.isEmpty();
     }
 
+    /**
+     * 포인트 환불 (중복 환불 방지)
+     * @param refundAction 실제 환불 로직 (Point 엔티티 업데이트)
+     */
     public void refundPoints(java.util.function.LongConsumer refundAction) {
-        if (pointUsed != null && pointUsed > 0) {
+        if (pointUsed != null && pointUsed > 0 && !pointRefunded) {
             refundAction.accept(pointUsed);
-            this.pointUsed = 0L;
+            this.pointRefunded = true;
+            log.debug("[Payment] 포인트 환불 완료 - paymentId: {}, amount: {}", getId(), pointUsed);
+        } else if (pointRefunded) {
+            log.warn("[Payment] 이미 환불된 포인트 - paymentId: {}", getId());
         }
     }
 
