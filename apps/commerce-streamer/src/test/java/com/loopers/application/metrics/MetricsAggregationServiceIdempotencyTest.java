@@ -85,7 +85,7 @@ class MetricsAggregationServiceIdempotencyTest {
     void shouldIgnoreDuplicateProductUnlikedEvent() {
         // given - 좋아요 수를 먼저 1로 설정
         ProductMetrics metrics = metricsRepository.findById(PRODUCT_ID).orElseThrow();
-        metrics.incrementLikeCount(LocalDateTime.now().atZone(java.time.ZoneId.of("Asia/Seoul")));
+        metrics.incrementLikeCount();
         metricsRepository.save(metrics);
 
         String eventId = "event-unliked-001";

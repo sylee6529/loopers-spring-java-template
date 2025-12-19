@@ -11,6 +11,7 @@ import java.time.ZonedDateTime;
  * 상품별 집계 메트릭
  * - 좋아요 수, 조회 수, 판매량 등을 실시간 집계
  * - Kafka Consumer가 이벤트를 받아서 업데이트
+ * - event_handled 테이블로 멱등성 보장 (중복 처리 방지)
  */
 @Entity
 @Table(name = "product_metrics", indexes = {
@@ -60,12 +61,6 @@ public class ProductMetrics {
     private ZonedDateTime lastUpdated;
 
     /**
-     * 낙관적 락 (동시성 제어)
-     */
-    @Version
-    private int version;
-
-    /**
      * 상품 메트릭 초기 생성
      */
     public static ProductMetrics create(Long productId) {
@@ -80,71 +75,38 @@ public class ProductMetrics {
     }
 
     /**
-     * 좋아요 수 증가 (타임스탬프 체크)
-     * @param eventOccurredAt 이벤트 발생 시각
-     * @return 업데이트 성공 여부 (false = 오래된 이벤트로 무시됨)
+     * 좋아요 수 증가
      */
-    public boolean incrementLikeCount(ZonedDateTime eventOccurredAt) {
-        if (isEventOutdated(eventOccurredAt)) {
-            return false;
-        }
+    public void incrementLikeCount() {
         this.likeCount++;
-        this.lastUpdated = eventOccurredAt;
-        return true;
+        this.lastUpdated = ZonedDateTime.now();
     }
 
     /**
-     * 좋아요 수 감소 (타임스탬프 체크)
-     * @param eventOccurredAt 이벤트 발생 시각
-     * @return 업데이트 성공 여부 (false = 오래된 이벤트로 무시됨)
+     * 좋아요 수 감소
      */
-    public boolean decrementLikeCount(ZonedDateTime eventOccurredAt) {
-        if (isEventOutdated(eventOccurredAt)) {
-            return false;
-        }
+    public void decrementLikeCount() {
         this.likeCount = Math.max(0, this.likeCount - 1);
-        this.lastUpdated = eventOccurredAt;
-        return true;
+        this.lastUpdated = ZonedDateTime.now();
     }
 
     /**
-     * 조회 수 증가 (타임스탬프 체크)
-     * @param eventOccurredAt 이벤트 발생 시각
-     * @return 업데이트 성공 여부 (false = 오래된 이벤트로 무시됨)
+     * 조회 수 증가
      */
-    public boolean incrementViewCount(ZonedDateTime eventOccurredAt) {
-        if (isEventOutdated(eventOccurredAt)) {
-            return false;
-        }
+    public void incrementViewCount() {
         this.viewCount++;
-        this.lastUpdated = eventOccurredAt;
-        return true;
+        this.lastUpdated = ZonedDateTime.now();
     }
 
     /**
-     * 판매 데이터 추가 (타임스탬프 체크)
+     * 판매 데이터 추가
      * @param quantity 판매 수량
      * @param amount 판매 금액
-     * @param eventOccurredAt 이벤트 발생 시각
-     * @return 업데이트 성공 여부 (false = 오래된 이벤트로 무시됨)
      */
-    public boolean addSales(int quantity, long amount, ZonedDateTime eventOccurredAt) {
-        if (isEventOutdated(eventOccurredAt)) {
-            return false;
-        }
+    public void addSales(int quantity, long amount) {
         this.salesCount += quantity;
         this.salesAmount += amount;
-        this.lastUpdated = eventOccurredAt;
-        return true;
-    }
-
-    /**
-     * 이벤트가 현재 상태보다 오래된 것인지 체크
-     * @param eventOccurredAt 이벤트 발생 시각
-     * @return true = 오래된 이벤트 (무시해야 함), false = 최신 이벤트 (처리해야 함)
-     */
-    private boolean isEventOutdated(ZonedDateTime eventOccurredAt) {
-        return this.lastUpdated != null && eventOccurredAt.isBefore(this.lastUpdated);
+        this.lastUpdated = ZonedDateTime.now();
     }
 
     /**
