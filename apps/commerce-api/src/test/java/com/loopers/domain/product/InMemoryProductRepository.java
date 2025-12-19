@@ -24,6 +24,11 @@ public class InMemoryProductRepository implements ProductRepository {
     }
 
     @Override
+    public Optional<Product> findByIdForUpdate(Long id) {
+        return findById(id);
+    }
+
+    @Override
     public List<Product> findByIdIn(List<Long> ids) {
         return ids.stream()
                 .map(this::findById)
@@ -77,6 +82,16 @@ public class InMemoryProductRepository implements ProductRepository {
             return 0;
         }
         product.decreaseStock(quantity);
+        return 1;
+    }
+
+    @Override
+    public int increaseStock(Long productId, int quantity) {
+        Product product = store.get(productId);
+        if (product == null) {
+            return 0;
+        }
+        product.increaseStock(quantity);
         return 1;
     }
 

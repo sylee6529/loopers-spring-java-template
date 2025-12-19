@@ -23,10 +23,10 @@ class OrderTest {
                     new OrderItem(1L, 2, Money.of(10000)),
                     new OrderItem(2L, 1, Money.of(15000))
             );
-            
-            Order order = Order.create("member1", items);
-            
-            assertThat(order.getMemberId()).isEqualTo("member1");
+
+            Order order = Order.create(1L, items);
+
+            assertThat(order.getMemberId()).isEqualTo(1L);
             assertThat(order.getItems()).hasSize(2);
             assertThat(order.getTotalPrice()).isEqualTo(Money.of(35000)); // 20000 + 15000
         }
@@ -43,18 +43,18 @@ class OrderTest {
                     .hasMessageContaining("회원 ID는 필수입니다");
         }
 
-        @DisplayName("회원 ID가 빈값이면 예외가 발생한다")
+        @DisplayName("회원 ID가 0 이하면 예외가 발생한다")
         @Test
-        void shouldThrowException_whenMemberIdIsEmpty() {
+        void shouldThrowException_whenMemberIdIsInvalid() {
             List<OrderItem> items = List.of(
                     new OrderItem(1L, 1, Money.of(10000))
             );
-            
-            assertThatThrownBy(() -> Order.create("", items))
+
+            assertThatThrownBy(() -> Order.create(0L, items))
                     .isInstanceOf(CoreException.class)
                     .hasMessageContaining("회원 ID는 필수입니다");
-            
-            assertThatThrownBy(() -> Order.create("   ", items))
+
+            assertThatThrownBy(() -> Order.create(-1L, items))
                     .isInstanceOf(CoreException.class)
                     .hasMessageContaining("회원 ID는 필수입니다");
         }
@@ -62,11 +62,11 @@ class OrderTest {
         @DisplayName("주문 항목이 null이거나 비어있으면 예외가 발생한다")
         @Test
         void shouldThrowException_whenItemsAreNullOrEmpty() {
-            assertThatThrownBy(() -> Order.create("member1", null))
+            assertThatThrownBy(() -> Order.create(1L, null))
                     .isInstanceOf(CoreException.class)
                     .hasMessageContaining("주문 항목은 필수입니다");
-            
-            assertThatThrownBy(() -> Order.create("member1", List.of()))
+
+            assertThatThrownBy(() -> Order.create(1L, List.of()))
                     .isInstanceOf(CoreException.class)
                     .hasMessageContaining("주문 항목은 필수입니다");
         }
@@ -84,9 +84,9 @@ class OrderTest {
                     new OrderItem(2L, 3, Money.of(8000)),   // 24000
                     new OrderItem(3L, 1, Money.of(12000))   // 12000
             );
-            
-            Order order = Order.create("member1", items);
-            
+
+            Order order = Order.create(1L, items);
+
             assertThat(order.getTotalPrice()).isEqualTo(Money.of(46000));
         }
 
@@ -95,9 +95,9 @@ class OrderTest {
         void shouldEqualItemTotalPrice_whenSingleItem() {
             OrderItem item = new OrderItem(1L, 3, Money.of(10000));
             List<OrderItem> items = List.of(item);
-            
-            Order order = Order.create("member1", items);
-            
+
+            Order order = Order.create(1L, items);
+
             assertThat(order.getTotalPrice()).isEqualTo(item.getTotalPrice());
             assertThat(order.getTotalPrice()).isEqualTo(Money.of(30000));
         }
@@ -113,10 +113,10 @@ class OrderTest {
             List<OrderItem> items = List.of(
                     new OrderItem(1L, 1, Money.of(10000))
             );
-            
-            Order order = Order.create("member1", items);
+
+            Order order = Order.create(1L, items);
             List<OrderItem> returnedItems = order.getItems();
-            
+
             // 반환된 리스트 수정 시도 시 예외 발생
             assertThatThrownBy(() -> returnedItems.add(new OrderItem(2L, 1, Money.of(5000))))
                     .isInstanceOf(UnsupportedOperationException.class);
@@ -130,9 +130,9 @@ class OrderTest {
                     new OrderItem(2L, 1, Money.of(10000)),
                     new OrderItem(3L, 3, Money.of(3000))
             );
-            
-            Order order = Order.create("member1", items);
-            
+
+            Order order = Order.create(1L, items);
+
             assertThat(order.getItems()).hasSize(3);
         }
     }

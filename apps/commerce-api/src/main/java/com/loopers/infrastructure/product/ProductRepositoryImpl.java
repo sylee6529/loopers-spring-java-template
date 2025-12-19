@@ -34,6 +34,11 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
     @Override
+    public Optional<Product> findByIdForUpdate(Long id) {
+        return productJpaRepository.findByIdForUpdate(id);
+    }
+
+    @Override
     public List<Product> findByIdIn(List<Long> ids) {
         return productJpaRepository.findAllById(ids);
     }
@@ -121,6 +126,15 @@ public class ProductRepositoryImpl implements ProductRepository {
                 .set(product.stock.quantity, product.stock.quantity.subtract(quantity))
                 .where(product.id.eq(productId)
                         .and(product.stock.quantity.goe(quantity)))
+                .execute());
+    }
+
+    @Override
+    public int increaseStock(Long productId, int quantity) {
+        return Math.toIntExact(queryFactory
+                .update(product)
+                .set(product.stock.quantity, product.stock.quantity.add(quantity))
+                .where(product.id.eq(productId))
                 .execute());
     }
 

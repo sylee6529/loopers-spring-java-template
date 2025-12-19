@@ -19,6 +19,11 @@ public class OrderRepositoryImpl implements OrderRepository {
     }
 
     @Override
+    public Optional<Order> findByOrderNo(String orderNo) {
+        return orderJpaRepository.findByOrderNo(orderNo);
+    }
+
+    @Override
     public Order save(Order order) {
         return orderJpaRepository.save(order);
     }

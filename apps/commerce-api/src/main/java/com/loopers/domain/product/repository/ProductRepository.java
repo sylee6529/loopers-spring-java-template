@@ -12,6 +12,8 @@ public interface ProductRepository {
 
     Optional<Product> findById(Long id);
 
+    Optional<Product> findByIdForUpdate(Long id);
+
     List<Product> findByIdIn(List<Long> ids);
 
     Page<Product> findAll(ProductSearchFilter filter, Pageable pageable);
@@ -21,6 +23,8 @@ public interface ProductRepository {
     Product save(Product product);
 
     int decreaseStock(Long productId, int quantity);
+
+    int increaseStock(Long productId, int quantity);
 
     int incrementLikeCount(Long productId);
 
