@@ -9,7 +9,6 @@ import com.loopers.application.event.product.ProductViewedEvent;
 import com.loopers.application.metrics.MetricsAggregationService;
 import com.loopers.confg.kafka.KafkaConfig;
 import com.loopers.infrastructure.kafka.DlqPublisher;
-import com.loopers.infrastructure.kafka.RetryTracker;
 import com.loopers.infrastructure.kafka.event.KafkaEventEnvelope;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +25,7 @@ import java.util.List;
  * - Product 관련 이벤트를 수신하여 메트릭 집계
  * - Manual Ack: 처리 성공 후에만 offset commit
  * - Batch Listener: 한 번에 여러 메시지 처리
+ * - 에러 처리: 복구 불가능한 에러는 DLQ로 전송, 일시적 에러는 Kafka 재시도
  */
 @Slf4j
 @Component
@@ -35,7 +35,6 @@ public class ProductMetricsConsumer {
     private final MetricsAggregationService aggregationService;
     private final ObjectMapper objectMapper;
     private final DlqPublisher dlqPublisher;
-    private final RetryTracker retryTracker;
 
     /**
      * 상품 좋아요 이벤트 Consumer
@@ -65,9 +64,6 @@ public class ProductMetricsConsumer {
                     envelope.eventId(),
                     envelope.payload()
                 );
-
-                // 성공 시 재시도 카운터 제거
-                retryTracker.clearRetryCount(record.topic(), record.partition(), record.offset());
 
             } catch (Exception e) {
                 log.error("[Consumer] Failed to process product-liked event - offset: {}, key: {}",
@@ -117,8 +113,6 @@ public class ProductMetricsConsumer {
                     envelope.payload()
                 );
 
-                retryTracker.clearRetryCount(record.topic(), record.partition(), record.offset());
-
             } catch (Exception e) {
                 log.error("[Consumer] Failed to process product-unliked event - offset: {}, key: {}",
                     record.offset(), record.key(), e);
@@ -165,8 +159,6 @@ public class ProductMetricsConsumer {
                     envelope.eventId(),
                     envelope.payload()
                 );
-
-                retryTracker.clearRetryCount(record.topic(), record.partition(), record.offset());
 
             } catch (Exception e) {
                 log.error("[Consumer] Failed to process order-completed event - offset: {}, key: {}",
@@ -215,8 +207,6 @@ public class ProductMetricsConsumer {
                     envelope.payload()
                 );
 
-                retryTracker.clearRetryCount(record.topic(), record.partition(), record.offset());
-
             } catch (Exception e) {
                 log.error("[Consumer] Failed to process product-viewed event - offset: {}, key: {}",
                     record.offset(), record.key(), e);
@@ -237,28 +227,20 @@ public class ProductMetricsConsumer {
 
     /**
      * 실패한 레코드 처리 공통 메서드
+     * - 복구 불가능한 에러: DLQ로 전송
+     * - 일시적 에러: 배치 재처리 (Kafka가 자동으로 재시도)
      */
     private void handleFailedRecord(
         ConsumerRecord<String, String> record,
         Exception exception,
         List<ConsumerRecord<String, String>> failedRecords
     ) {
-        // DLQ 전송 여부 결정
         if (dlqPublisher.shouldSendToDlq(exception)) {
-            // 복구 불가능한 에러 → DLQ로 전송
-            int retryCount = retryTracker.getRetryCount(record.topic(), record.partition(), record.offset());
-            dlqPublisher.publishToDlq(record, exception, retryCount);
-            retryTracker.clearRetryCount(record.topic(), record.partition(), record.offset());
+            // 복구 불가능한 에러 → 즉시 DLQ로 전송
+            dlqPublisher.publishToDlq(record, exception);
         } else {
-            // 일시적 에러 → 재시도 가능 여부 확인
-            if (retryTracker.canRetry(record.topic(), record.partition(), record.offset())) {
-                failedRecords.add(record);
-            } else {
-                // 최대 재시도 횟수 초과 → DLQ로 전송
-                int retryCount = retryTracker.getRetryCount(record.topic(), record.partition(), record.offset());
-                dlqPublisher.publishToDlq(record, exception, retryCount);
-                retryTracker.clearRetryCount(record.topic(), record.partition(), record.offset());
-            }
+            // 일시적 에러 → 재시도 대상에 추가
+            failedRecords.add(record);
         }
     }
 }

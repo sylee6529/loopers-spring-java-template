@@ -78,10 +78,9 @@ class DlqPublisherTest {
             "{\"invalid\":\"json}"
         );
         JsonProcessingException exception = new JsonProcessingException("Parse error") {};
-        int retryCount = 3;
 
         // when
-        dlqPublisher.publishToDlq(record, exception, retryCount);
+        dlqPublisher.publishToDlq(record, exception);
 
         // then
         DlqMessage savedMessage = dlqMessageRepository.findAll().get(0);
@@ -91,7 +90,6 @@ class DlqPublisherTest {
         assertThat(savedMessage.getMessageKey()).isEqualTo("product-123");
         assertThat(savedMessage.getMessageValue()).isEqualTo("{\"invalid\":\"json}");
         assertThat(savedMessage.getErrorType()).isEqualTo("JsonProcessingException");
-        assertThat(savedMessage.getRetryCount()).isEqualTo(3);
         assertThat(savedMessage.isResolved()).isFalse();
     }
 
@@ -109,7 +107,7 @@ class DlqPublisherTest {
         Exception exception = new RuntimeException("Test error");
 
         // when
-        dlqPublisher.publishToDlq(record, exception, 1);
+        dlqPublisher.publishToDlq(record, exception);
 
         // then
         DlqMessage savedMessage = dlqMessageRepository.findAll().get(0);

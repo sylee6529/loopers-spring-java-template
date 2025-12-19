@@ -25,10 +25,9 @@ public class DlqPublisher {
      *
      * @param record 실패한 Kafka 메시지
      * @param exception 발생한 예외
-     * @param retryCount 재시도 횟수
      */
     @Transactional
-    public void publishToDlq(ConsumerRecord<String, String> record, Exception exception, int retryCount) {
+    public void publishToDlq(ConsumerRecord<String, String> record, Exception exception) {
         try {
             DlqMessage dlqMessage = DlqMessage.create(
                 record.topic(),
@@ -36,8 +35,7 @@ public class DlqPublisher {
                 record.offset(),
                 record.key(),
                 record.value(),
-                exception,
-                retryCount
+                exception
             );
 
             dlqMessageRepository.save(dlqMessage);

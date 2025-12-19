@@ -81,12 +81,6 @@ public class DlqMessage {
     private ZonedDateTime failedAt;
 
     /**
-     * 재처리 시도 횟수
-     */
-    @Column(name = "retry_count", nullable = false)
-    private int retryCount = 0;
-
-    /**
      * 재처리 완료 여부
      */
     @Column(name = "resolved", nullable = false)
@@ -101,8 +95,7 @@ public class DlqMessage {
             Long originalOffset,
             String messageKey,
             String messageValue,
-            Exception exception,
-            int retryCount
+            Exception exception
     ) {
         DlqMessage dlqMessage = new DlqMessage();
         dlqMessage.originalTopic = originalTopic;
@@ -114,7 +107,6 @@ public class DlqMessage {
         dlqMessage.errorMessage = exception.getMessage();
         dlqMessage.stackTrace = getStackTraceAsString(exception);
         dlqMessage.failedAt = ZonedDateTime.now();
-        dlqMessage.retryCount = retryCount;
         dlqMessage.resolved = false;
         return dlqMessage;
     }
