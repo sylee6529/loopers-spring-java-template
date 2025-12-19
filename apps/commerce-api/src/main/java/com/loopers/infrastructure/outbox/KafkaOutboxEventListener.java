@@ -9,6 +9,8 @@ import com.loopers.application.event.product.ProductViewedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -98,6 +100,7 @@ public class KafkaOutboxEventListener {
      * 상품 조회 이벤트 → Outbox 저장
      */
     @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleProductViewed(ProductViewedEvent event) {
         log.debug("[Outbox] ProductViewedEvent 수신 - productId: {}", event.productId());
 
