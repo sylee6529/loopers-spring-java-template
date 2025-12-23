@@ -1,5 +1,6 @@
-package com.loopers.domain.dlq;
+package com.loopers.infrastructure.persistence;
 
+import com.loopers.domain.dlq.DlqMessage;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 

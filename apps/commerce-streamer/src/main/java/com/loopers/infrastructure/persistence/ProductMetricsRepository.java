@@ -1,5 +1,6 @@
-package com.loopers.domain.metrics;
+package com.loopers.infrastructure.persistence;
 
+import com.loopers.domain.metrics.ProductMetrics;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;

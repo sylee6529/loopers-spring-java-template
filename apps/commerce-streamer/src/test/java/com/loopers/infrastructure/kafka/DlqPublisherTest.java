@@ -2,7 +2,7 @@ package com.loopers.infrastructure.kafka;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.loopers.domain.dlq.DlqMessage;
-import com.loopers.domain.dlq.DlqMessageRepository;
+import com.loopers.infrastructure.persistence.DlqMessageRepository;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

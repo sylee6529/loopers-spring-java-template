@@ -1,7 +1,7 @@
 package com.loopers.infrastructure.kafka;
 
 import com.loopers.domain.dlq.DlqMessage;
-import com.loopers.domain.dlq.DlqMessageRepository;
+import com.loopers.infrastructure.persistence.DlqMessageRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;

@@ -1,10 +1,12 @@
-package com.loopers.domain.event;
+package com.loopers.infrastructure.persistence;
 
+import com.loopers.domain.event.EventHandled;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.ZonedDateTime;
+import java.util.List;
 
 public interface EventHandledRepository extends JpaRepository<EventHandled, String> {
 
@@ -24,5 +26,5 @@ public interface EventHandledRepository extends JpaRepository<EventHandled, Stri
      * 특정 파티션 키의 처리 이력 조회 (디버깅용)
      */
     @Query("SELECT e FROM EventHandled e WHERE e.partitionKey = :partitionKey ORDER BY e.handledAt DESC")
-    java.util.List<EventHandled> findByPartitionKey(@Param("partitionKey") String partitionKey);
+    List<EventHandled> findByPartitionKey(@Param("partitionKey") String partitionKey);
 }
