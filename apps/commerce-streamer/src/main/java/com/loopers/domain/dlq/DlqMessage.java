@@ -103,7 +103,7 @@ public class DlqMessage {
         dlqMessage.originalOffset = originalOffset;
         dlqMessage.messageKey = messageKey;
         dlqMessage.messageValue = messageValue;
-        dlqMessage.errorType = exception.getClass().getSimpleName();
+        dlqMessage.errorType = resolveErrorType(exception);
         dlqMessage.errorMessage = exception.getMessage();
         dlqMessage.stackTrace = getStackTraceAsString(exception);
         dlqMessage.failedAt = ZonedDateTime.now();
@@ -137,5 +137,18 @@ public class DlqMessage {
         }
 
         return sb.toString();
+    }
+
+    private static String resolveErrorType(Exception exception) {
+        String simpleName = exception.getClass().getSimpleName();
+        if (!simpleName.isEmpty()) {
+            return simpleName;
+        }
+        // 익명 클래스의 경우 simpleName이 빈 문자열이므로 부모 클래스 이름 사용
+        Class<?> superClass = exception.getClass().getSuperclass();
+        if (superClass != null) {
+            return superClass.getSimpleName();
+        }
+        return exception.getClass().getName();
     }
 }
