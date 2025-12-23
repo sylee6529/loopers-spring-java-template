@@ -3,6 +3,8 @@ package com.loopers.infrastructure.kafka;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
+import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
@@ -24,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
         "spring.kafka.producer.value-serializer=org.springframework.kafka.support.serializer.JsonSerializer"
     }
 )
+@ImportAutoConfiguration(JacksonAutoConfiguration.class)
 @ActiveProfiles("test")
 class KafkaConnectionTest {
 
@@ -62,7 +65,7 @@ class KafkaConnectionTest {
 
         // then
         assertThat(configs.get("acks")).isEqualTo("all");
-        assertThat(configs.get("enable.idempotence")).isEqualTo(true);
+        assertThat(Boolean.parseBoolean(String.valueOf(configs.get("enable.idempotence")))).isTrue();
 
         System.out.println("✅ Producer 설정 확인:");
         System.out.println("acks: " + configs.get("acks"));

@@ -37,12 +37,4 @@ public class KafkaTopicRouter {
         };
     }
 
-    /**
-     * 토픽 이름이 유효한지 검증
-     */
-    public boolean isValidTopic(String topicName) {
-        return topicName != null &&
-               topicName.startsWith(TOPIC_PREFIX) &&
-               topicName.endsWith(TOPIC_VERSION);
-    }
 }
