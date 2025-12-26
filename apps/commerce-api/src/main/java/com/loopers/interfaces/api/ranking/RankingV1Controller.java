@@ -4,9 +4,13 @@ import com.loopers.application.ranking.RankingFacade;
 import com.loopers.application.ranking.RankingInfo.RankingPageInfo;
 import com.loopers.interfaces.api.ApiResponse;
 import com.loopers.interfaces.api.ranking.RankingV1Dto.RankingPageResponse;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+@Validated
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/v1")
@@ -23,8 +27,8 @@ public class RankingV1Controller {
     @GetMapping("/rankings")
     public ApiResponse<RankingPageResponse> getRankings(
             @RequestParam(value = "date", required = false) String date,
-            @RequestParam(value = "page", defaultValue = "1") int page,
-            @RequestParam(value = "size", defaultValue = "20") int size
+            @RequestParam(value = "page", defaultValue = "1") @Min(1) int page,
+            @RequestParam(value = "size", defaultValue = "20") @Min(1) @Max(100) int size
     ) {
         // API는 1-based, 내부는 0-based로 변환
         int zeroBasedPage = Math.max(0, page - 1);
