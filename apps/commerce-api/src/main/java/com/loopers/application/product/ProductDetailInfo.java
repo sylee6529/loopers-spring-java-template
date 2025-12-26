@@ -1,14 +1,13 @@
 package com.loopers.application.product;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.loopers.domain.common.vo.Money;
 import com.loopers.domain.product.vo.Stock;
 import lombok.Builder;
+import lombok.Getter;
 
+@Getter
 @Builder
-@JsonDeserialize(builder = ProductDetailInfo.ProductDetailInfoBuilder.class)
 public class ProductDetailInfo {
 
     private final Long id;
@@ -20,25 +19,7 @@ public class ProductDetailInfo {
     private final Money price;
     private final Stock stock;
     private final int likeCount;
+    @JsonProperty("likedByMember")
     private final boolean isLikedByMember;
     private final Integer ranking;  // 순위 (1-based), 순위권 밖이면 null
-
-    public Long getId() { return id; }
-    public String getName() { return name; }
-    public String getDescription() { return description; }
-    public Long getBrandId() { return brandId; }
-    public String getBrandName() { return brandName; }
-    public String getBrandDescription() { return brandDescription; }
-    public Money getPrice() { return price; }
-    public Stock getStock() { return stock; }
-    public int getLikeCount() { return likeCount; }
-
-    @JsonProperty("likedByMember")
-    public boolean isLikedByMember() { return isLikedByMember; }
-
-    public Integer getRanking() { return ranking; }
-
-    @JsonPOJOBuilder(withPrefix = "")
-    public static class ProductDetailInfoBuilder {
-    }
 }
