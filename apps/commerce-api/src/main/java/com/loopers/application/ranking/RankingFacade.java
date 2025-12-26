@@ -34,13 +34,7 @@ public class RankingFacade {
     private final ProductRepository productRepository;
     private final BrandRepository brandRepository;
 
-    /**
-     * 랭킹 페이지 조회
-     * @param date 날짜 (yyyyMMdd), null이면 오늘
-     * @param page 페이지 번호 (0-based)
-     * @param size 페이지 크기
-     * @return 랭킹 페이지 정보
-     */
+    /** @param page 0-based */
     public RankingPageInfo getRankings(String date, int page, int size) {
         // 날짜 검증 및 기본값 처리
         String targetDate = validateAndNormalizeDate(date);
@@ -101,12 +95,7 @@ public class RankingFacade {
         return RankingPageInfo.of(rankings, targetDate, page, size, totalCount);
     }
 
-    /**
-     * 날짜 파라미터 검증 및 정규화
-     * @param date 날짜 문자열 (yyyyMMdd 형식) 또는 null
-     * @return 검증된 날짜 문자열 (null이면 오늘 날짜)
-     * @throws IllegalArgumentException 유효하지 않은 날짜 형식
-     */
+    /** @throws IllegalArgumentException 유효하지 않은 날짜 형식 */
     private String validateAndNormalizeDate(String date) {
         if (date == null || date.isBlank()) {
             return productRankingCache.getTodayDate();

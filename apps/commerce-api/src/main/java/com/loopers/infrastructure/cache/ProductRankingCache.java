@@ -29,21 +29,12 @@ public class ProductRankingCache {
 
     private final RedisTemplate<String, Object> cacheRedisTemplate;
 
-    /**
-     * 상품의 오늘 날짜 기준 순위 조회
-     * @param productId 상품 ID
-     * @return 순위 (1-based), 순위권 밖이면 null
-     */
+    /** @return 순위 (1-based), 순위권 밖이면 null */
     public Integer getRank(Long productId) {
         return getRank(productId, getTodayDate());
     }
 
-    /**
-     * 상품의 특정 날짜 순위 조회
-     * @param productId 상품 ID
-     * @param date 날짜 (yyyyMMdd 형식)
-     * @return 순위 (1-based), 순위권 밖이면 null
-     */
+    /** @return 순위 (1-based), 순위권 밖이면 null */
     public Integer getRank(Long productId, String date) {
         try {
             String key = CacheKeyGenerator.dailyRankingKey(date);
@@ -65,18 +56,10 @@ public class ProductRankingCache {
         }
     }
 
-    /**
-     * 상품의 점수 조회
-     * @param productId 상품 ID
-     * @return 점수, 없으면 null
-     */
     public Double getScore(Long productId) {
         return getScore(productId, getTodayDate());
     }
 
-    /**
-     * 상품의 특정 날짜 점수 조회
-     */
     public Double getScore(Long productId, String date) {
         try {
             String key = CacheKeyGenerator.dailyRankingKey(date);
@@ -88,20 +71,11 @@ public class ProductRankingCache {
         }
     }
 
-    /**
-     * 오늘 날짜 문자열 반환 (Asia/Seoul 기준)
-     */
     public String getTodayDate() {
         return LocalDate.now(ZONE_ID).format(DATE_FORMATTER);
     }
 
-    /**
-     * 랭킹 상위 목록 조회 (페이지네이션)
-     * @param date 날짜 (yyyyMMdd 형식)
-     * @param page 페이지 번호 (0-based)
-     * @param size 페이지 크기
-     * @return 상품 ID와 점수 목록 (순위 높은 순)
-     */
+    /** @param page 0-based */
     public List<RankingEntry> getTopRankings(String date, int page, int size) {
         try {
             String key = CacheKeyGenerator.dailyRankingKey(date);
@@ -134,9 +108,6 @@ public class ProductRankingCache {
         }
     }
 
-    /**
-     * 전체 랭킹 수 조회
-     */
     public long getTotalCount(String date) {
         try {
             String key = CacheKeyGenerator.dailyRankingKey(date);
@@ -148,8 +119,5 @@ public class ProductRankingCache {
         }
     }
 
-    /**
-     * 랭킹 엔트리 (순위, 상품ID, 점수)
-     */
     public record RankingEntry(int rank, Long productId, Double score) {}
 }

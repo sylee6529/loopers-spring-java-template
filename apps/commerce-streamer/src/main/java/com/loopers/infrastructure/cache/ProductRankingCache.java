@@ -45,44 +45,26 @@ public class ProductRankingCache {
         this.rankingConfig = rankingConfig;
     }
 
-    /**
-     * 조회 이벤트 점수 추가
-     */
     public void addViewScore(Long productId) {
         double score = rankingConfig.getWeight().getView();
         incrementScore(productId, score);
         log.debug("[Ranking] View score added - productId: {}, score: {}", productId, score);
     }
 
-    /**
-     * 좋아요 이벤트 점수 추가
-     */
     public void addLikeScore(Long productId) {
         double score = rankingConfig.getWeight().getLike();
         incrementScore(productId, score);
         log.debug("[Ranking] Like score added - productId: {}, score: {}", productId, score);
     }
 
-    /**
-     * 좋아요 취소 이벤트 점수 감소
-     * - 좋아요 추가와 동일한 가중치만큼 감소
-     * - 점수가 0 이하가 되어도 ZSET에서 자동 제거되지 않음 (일관성 유지)
-     */
+    /** 점수가 0 이하가 되어도 ZSET에서 자동 제거되지 않음 (일관성 유지) */
     public void subtractLikeScore(Long productId) {
         double score = rankingConfig.getWeight().getLike();
         decrementScore(productId, score);
         log.debug("[Ranking] Like score subtracted - productId: {}, score: -{}", productId, score);
     }
 
-    /**
-     * 주문 이벤트 점수 추가
-     * - log 정규화를 적용하여 고가 상품의 과도한 점수 편중 방지
-     * - Math.log1p(x) = ln(1 + x)로 안전하게 계산
-     *
-     * @param productId 상품 ID
-     * @param price 상품 단가
-     * @param quantity 주문 수량
-     */
+    /** log 정규화로 고가 상품의 과도한 점수 편중 방지: log1p(price * qty) */
     public void addOrderScore(Long productId, long price, int quantity) {
         double weight = rankingConfig.getWeight().getOrder();
         long orderAmount = price * quantity;
@@ -94,12 +76,7 @@ public class ProductRankingCache {
                 productId, price, quantity, orderAmount, score);
     }
 
-    /**
-     * 주문 아이템 배치 점수 추가 (Pipeline 사용)
-     * - 여러 아이템을 한 번의 Redis 요청으로 처리하여 네트워크 오버헤드 감소
-     *
-     * @param orderItems 주문 아이템 목록 (productId -> OrderItemScore)
-     */
+    /** Pipeline으로 여러 아이템을 한 번의 Redis 요청으로 처리 */
     public void addOrderScoresBatch(List<OrderItemScore> orderItems) {
         if (orderItems == null || orderItems.isEmpty()) {
             return;
@@ -136,14 +113,8 @@ public class ProductRankingCache {
         }
     }
 
-    /**
-     * 주문 아이템 점수 정보
-     */
     public record OrderItemScore(Long productId, long price, int quantity) {}
 
-    /**
-     * ZSET 점수 증가 (ZINCRBY)
-     */
     private void incrementScore(Long productId, double score) {
         try {
             String key = getTodayKey();
@@ -155,9 +126,6 @@ public class ProductRankingCache {
         }
     }
 
-    /**
-     * ZSET 점수 감소 (ZINCRBY with negative value)
-     */
     private void decrementScore(Long productId, double score) {
         try {
             String key = getTodayKey();
@@ -170,10 +138,7 @@ public class ProductRankingCache {
         }
     }
 
-    /**
-     * TTL 설정 (원자적 처리)
-     * getAndSet으로 키 변경 시에만 TTL 설정 (날짜가 바뀌는 경우)
-     */
+    /** getAndSet으로 키 변경 시에만 TTL 설정 (날짜가 바뀌는 시점) */
     private void ensureTtl(String key) {
         String oldKey = ttlInitializedKey.getAndSet(key);
         if (!key.equals(oldKey)) {
@@ -182,18 +147,12 @@ public class ProductRankingCache {
         }
     }
 
-    /**
-     * 오늘 날짜 키 생성 (Asia/Seoul 기준)
-     * CacheKeyGenerator를 사용하여 commerce-api와 동일한 키 형식 보장
-     */
+    /** Asia/Seoul 기준, commerce-api와 동일한 키 형식 */
     private String getTodayKey() {
         String date = LocalDate.now(ZONE_ID).format(DATE_FORMATTER);
         return CacheKeyGenerator.dailyRankingKey(date);
     }
 
-    /**
-     * 특정 날짜 키 생성
-     */
     public static String getKeyForDate(String date) {
         return CacheKeyGenerator.dailyRankingKey(date);
     }
