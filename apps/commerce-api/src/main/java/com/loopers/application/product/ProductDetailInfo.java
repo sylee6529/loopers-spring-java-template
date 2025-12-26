@@ -14,16 +14,19 @@ public class ProductDetailInfo {
     private final Long id;
     private final String name;
     private final String description;
+    private final Long brandId;
     private final String brandName;
     private final String brandDescription;
     private final Money price;
     private final Stock stock;
     private final int likeCount;
     private final boolean isLikedByMember;
+    private final Integer ranking;  // 순위 (1-based), 순위권 밖이면 null
 
     public Long getId() { return id; }
     public String getName() { return name; }
     public String getDescription() { return description; }
+    public Long getBrandId() { return brandId; }
     public String getBrandName() { return brandName; }
     public String getBrandDescription() { return brandDescription; }
     public Money getPrice() { return price; }
@@ -32,6 +35,8 @@ public class ProductDetailInfo {
 
     @JsonProperty("likedByMember")
     public boolean isLikedByMember() { return isLikedByMember; }
+
+    public Integer getRanking() { return ranking; }
 
     @JsonPOJOBuilder(withPrefix = "")
     public static class ProductDetailInfoBuilder {
