@@ -13,6 +13,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +27,8 @@ import java.util.stream.Collectors;
 @Component
 @Transactional(readOnly = true)
 public class RankingFacade {
+
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     private final ProductRankingCache productRankingCache;
     private final ProductRepository productRepository;
@@ -37,8 +42,8 @@ public class RankingFacade {
      * @return 랭킹 페이지 정보
      */
     public RankingPageInfo getRankings(String date, int page, int size) {
-        // 날짜 기본값: 오늘
-        String targetDate = date != null ? date : productRankingCache.getTodayDate();
+        // 날짜 검증 및 기본값 처리
+        String targetDate = validateAndNormalizeDate(date);
 
         // 1. ZSET에서 랭킹 조회
         List<RankingEntry> rankingEntries = productRankingCache.getTopRankings(targetDate, page, size);
@@ -94,5 +99,24 @@ public class RankingFacade {
         long totalCount = productRankingCache.getTotalCount(targetDate);
 
         return RankingPageInfo.of(rankings, targetDate, page, size, totalCount);
+    }
+
+    /**
+     * 날짜 파라미터 검증 및 정규화
+     * @param date 날짜 문자열 (yyyyMMdd 형식) 또는 null
+     * @return 검증된 날짜 문자열 (null이면 오늘 날짜)
+     * @throws IllegalArgumentException 유효하지 않은 날짜 형식
+     */
+    private String validateAndNormalizeDate(String date) {
+        if (date == null || date.isBlank()) {
+            return productRankingCache.getTodayDate();
+        }
+
+        try {
+            LocalDate.parse(date, DATE_FORMATTER);
+            return date;
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException("Invalid date format. Expected yyyyMMdd, got: " + date);
+        }
     }
 }

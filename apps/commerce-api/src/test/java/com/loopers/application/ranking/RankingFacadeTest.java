@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -173,5 +174,29 @@ class RankingFacadeTest {
         when(brand.getId()).thenReturn(id);
         when(brand.getName()).thenReturn(name);
         return brand;
+    }
+
+    @Test
+    @DisplayName("getRankings - 잘못된 날짜 형식은 예외 발생")
+    void getRankings_throwsExceptionForInvalidDateFormat() {
+        // given
+        String invalidDate = "2025-12-26";  // yyyy-MM-dd 형식 (잘못됨)
+
+        // when & then
+        assertThatThrownBy(() -> rankingFacade.getRankings(invalidDate, 0, 10))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Invalid date format");
+    }
+
+    @Test
+    @DisplayName("getRankings - 존재하지 않는 날짜는 예외 발생")
+    void getRankings_throwsExceptionForNonExistentDate() {
+        // given
+        String invalidDate = "20251332";  // 13월 32일 (존재하지 않는 날짜)
+
+        // when & then
+        assertThatThrownBy(() -> rankingFacade.getRankings(invalidDate, 0, 10))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Invalid date format");
     }
 }
