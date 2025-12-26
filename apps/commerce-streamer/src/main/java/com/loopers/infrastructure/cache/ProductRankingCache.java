@@ -171,15 +171,14 @@ public class ProductRankingCache {
     }
 
     /**
-     * TTL 설정 (CAS로 원자적 처리)
-     * AtomicReference를 사용하여 날짜별로 한 번만 설정 (Race Condition 방지)
+     * TTL 설정 (원자적 처리)
+     * getAndSet으로 키 변경 시에만 TTL 설정 (날짜가 바뀌는 경우)
      */
     private void ensureTtl(String key) {
-        if (!key.equals(ttlInitializedKey.get())) {
-            if (ttlInitializedKey.compareAndSet(ttlInitializedKey.get(), key)) {
-                cacheRedisTemplate.expire(key, rankingConfig.getTtlDays(), TimeUnit.DAYS);
-                log.info("[Ranking] TTL set for key: {} ({} days)", key, rankingConfig.getTtlDays());
-            }
+        String oldKey = ttlInitializedKey.getAndSet(key);
+        if (!key.equals(oldKey)) {
+            cacheRedisTemplate.expire(key, rankingConfig.getTtlDays(), TimeUnit.DAYS);
+            log.info("[Ranking] TTL set for key: {} ({} days)", key, rankingConfig.getTtlDays());
         }
     }
 
