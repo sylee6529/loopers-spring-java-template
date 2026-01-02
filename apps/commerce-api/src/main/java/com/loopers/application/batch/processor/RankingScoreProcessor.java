@@ -45,7 +45,7 @@ public class RankingScoreProcessor implements ItemProcessor<ProductMetricsDto, R
     /**
      * 총 점수 계산 (기존 Redis 방식과 동일한 가중치)
      */
-    private double calculateTotalScore(Long viewCount, Long likeCount, Long salesAmount) {
+    private double calculateTotalScore(long viewCount, long likeCount, long salesAmount) {
         double viewScore = viewCount * viewWeight;
         double likeScore = likeCount * likeWeight;
 
