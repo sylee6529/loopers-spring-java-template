@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS mv_product_rank_weekly (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     PRIMARY KEY (id),
-    INDEX idx_week_rank (week_start_date, rank_position),
+    UNIQUE KEY uk_weekly_ranking_week_position (week_start_date, rank_position),
     INDEX idx_week_product (week_start_date, product_id),
     INDEX idx_product_week (product_id, week_start_date)
 ) COMMENT '주간 상품 랭킹 (TOP 100)';
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS mv_product_rank_monthly (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     PRIMARY KEY (id),
-    INDEX idx_month_rank (month_year, rank_position),
+    UNIQUE KEY uk_monthly_ranking_month_position (month_start_date, rank_position),
     INDEX idx_month_product (month_year, product_id),
     INDEX idx_product_month (product_id, month_year)
 ) COMMENT '월간 상품 랭킹 (TOP 100)';

@@ -9,7 +9,15 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "mv_product_rank_monthly")
+@Table(
+    name = "mv_product_rank_monthly",
+    uniqueConstraints = {
+        @UniqueConstraint(
+            name = "uk_monthly_ranking_month_position",
+            columnNames = {"month_start_date", "rank_position"}
+        )
+    }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MonthlyRanking extends BaseEntity {
